@@ -1,5 +1,5 @@
 /* SmartMeal — app.js  (shared across all pages) */
-const API = 'https://meal-planner-smart.onrender.com';
+const API = 'https://meal-planner-smart.onrender.com/api';
 
 /* ── token helpers ── */
 const getToken = () => localStorage.getItem('sm_token');
@@ -26,7 +26,7 @@ async function requireLogin() {
   const token = getToken();
   if (!token) { location.href = 'login.html'; return null; }
   try {
-    const data = await api('/auth/me');
+    const data = await api('/profile');
     localStorage.setItem('sm_user', JSON.stringify(data.user));
     return data.user;
   } catch {
