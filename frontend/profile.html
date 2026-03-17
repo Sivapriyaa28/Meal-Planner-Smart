@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartMeal — Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="app.css"/>
+  <style>
+    .hero-card{
+      background:linear-gradient(135deg,rgba(234,88,12,.86),rgba(249,115,22,.76),rgba(234,179,8,.7));
+      border-radius:var(--r-xl);padding:1.75rem;margin-bottom:1rem;
+      position:relative;overflow:hidden;border:1.5px solid rgba(255,255,255,.28);
+      box-shadow:0 8px 32px rgba(234,88,12,.22);
+    }
+    .hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,rgba(255,255,255,.4),rgba(255,255,255,.1));}
+    .hero-inner{display:flex;align-items:center;gap:1.25rem;}
+    .avatar-big{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.22);border:2.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:1.6rem;font-weight:800;color:#fff;flex-shrink:0;backdrop-filter:blur(10px);}
+    .hero-name{font-family:var(--font-d);font-size:1.45rem;color:#fff;margin-bottom:.15rem;}
+    .hero-email{font-size:.83rem;color:rgba(255,255,255,.78);}
+    .hero-badge-row{margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap;}
+    .hbadge{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:var(--r-full);background:rgba(255,255,255,.18);color:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(6px);}
+
+    .settings-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:.5px solid rgba(255,255,255,.38);}
+    .settings-row:last-child{border-bottom:none;}
+    .settings-key{font-size:.9rem;font-weight:600;color:var(--n800);}
+    .settings-val{font-size:.85rem;color:var(--n400);font-weight:500;}
+    .settings-edit{font-size:.78rem;font-weight:700;color:var(--o500);cursor:pointer;background:none;border:none;padding:0;transition:color .18s;}
+    .settings-edit:hover{color:var(--o700);}
+
+    .danger-zone{background:rgba(254,242,242,.75);backdrop-filter:blur(16px);border:1.5px solid rgba(254,202,202,.85);border-radius:var(--r-xl);padding:1.5rem;margin-top:1rem;box-shadow:0 4px 18px rgba(239,68,68,.08);}
+    .danger-title{font-family:var(--font-d);font-size:1rem;color:var(--red);margin-bottom:.85rem;display:flex;align-items:center;gap:8px;}
+    .danger-actions{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+    .danger-note{font-size:.8rem;color:var(--red);opacity:.7;}
+
+    .tab-row{display:flex;gap:5px;background:rgba(234,88,12,.07);border:1px solid rgba(234,88,12,.1);border-radius:var(--r-full);padding:4px;margin-bottom:1.25rem;}
+    .ptab{flex:1;padding:8px;border-radius:var(--r-full);border:none;font-family:var(--font-b);font-size:.87rem;font-weight:600;cursor:pointer;color:var(--n500);background:transparent;transition:all .22s;}
+    .ptab.active{background:linear-gradient(135deg,var(--o600),var(--o400));color:#fff;box-shadow:0 3px 10px rgba(234,88,12,.26);}
+    .ptab:hover:not(.active){color:var(--o600);background:rgba(249,115,22,.08);}
+
+    .tab-panel{display:none;}.tab-panel.active{display:block;animation:fadeIn .25s ease both;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  </style>
+</head>
+<body>
+  <div class="orb orb1"></div><div class="orb orb2"></div>
+
+  <nav class="navbar">
+    <div class="nav-inner" id="navInner">
+      <a class="nav-logo" href="dashboard.html"><span style="font-size:1.5rem;">🥗</span>SmartMeal</a>
+      <ul class="nav-links">
+        <li><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+        <li><a class="nav-link" href="meals.html">Meals</a></li>
+        <li><a class="nav-link" href="recipes.html">Recipes</a></li>
+        <li><a class="nav-link" href="profile.html">Profile</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- Hero -->
+    <div class="hero-card">
+      <div class="hero-inner">
+        <div class="avatar-big" id="avatarInitials">?</div>
+        <div>
+          <div class="hero-name" id="heroName">Loading…</div>
+          <div class="hero-email" id="heroEmail"></div>
+          <div class="hero-badge-row">
+            <span class="hbadge" id="heroBMI">BMI —</span>
+            <span class="hbadge" id="heroGoal">Goal —</span>
+            <span class="hbadge" id="heroCal">— kcal/day</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health metrics -->
+    <div class="metrics metrics-3" style="margin-bottom:1rem;">
+      <div class="metric-card"><span class="metric-val" id="mBMI">—</span><span class="metric-lbl">BMI</span></div>
+      <div class="metric-card"><span class="metric-val" id="mCal">—</span><span class="metric-lbl">Daily kcal</span></div>
+      <div class="metric-card"><span class="metric-val" id="mPro">—</span><span class="metric-lbl">Protein goal</span></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-row">
+      <button class="ptab active" onclick="switchTab('overview')">Overview</button>
+      <button class="ptab"        onclick="switchTab('edit')">Edit Profile</button>
+      <button class="ptab"        onclick="switchTab('goals')">Goals</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="card">
+        <div class="sec-title">📋 Account Details</div>
+        <div class="settings-row"><span class="settings-key">Full name</span><span class="settings-val" id="ovName">—</span></div>
+        <div class="settings-row"><span class="settings-key">Email</span><span class="settings-val" id="ovEmail">—</span></div>
+        <div class="settings-row"><span class="settings-key">Member since</span><span class="settings-val" id="ovSince">—</span></div>
+      </div>
+      <div class="card">
+        <div class="sec-title">🎯 Health Profile</div>
+        <div class="settings-row"><span class="settings-key">Goal</span><span class="settings-val" id="ovGoal">—</span></div>
+        <div class="settings-row"><span class="settings-key">Activity level</span><span class="settings-val" id="ovActivity">—</span></div>
+        <div class="settings-row"><span class="settings-key">Height</span><span class="settings-val" id="ovHeight">—</span></div>
+        <div class="settings-row"><span class="settings-key">Current weight</span><span class="settings-val" id="ovWeight">—</span></div>
+        <div class="settings-row"><span class="settings-key">Target weight</span><span class="settings-val" id="ovTarget">—</span></div>
+        <div class="settings-row"><span class="settings-key">Age</span><span class="settings-val" id="ovAge">—</span></div>
+        <div class="settings-row"><span class="settings-key">BMI category</span><span class="settings-val" id="ovBMICat">—</span></div>
+      </div>
+    </div>
+
+    <!-- Edit Tab -->
+    <div class="tab-panel" id="tab-edit">
+      <div class="card">
+        <div class="sec-title">✏️ Personal Information</div>
+        <form id="editForm">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+            <div class="field-group"><label class="field-label">First name</label><input class="field-input" id="eFn" placeholder="Jane"/></div>
+            <div class="field-group"><label class="field-label">Last name</label><input class="field-input" id="eLn" placeholder="Doe"/></div>
+          </div>
+          <div class="field-group"><label class="field-label">Email</label><input class="field-input" id="eEmail" type="email" placeholder="you@example.com"/></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+            <div class="field-group"><label class="field-label">Height (cm)</label><input class="field-input" type="number" id="eHeight" placeholder="170"/></div>
+            <div class="field-group"><label class="field-label">Weight (kg)</label><input class="field-input" type="number" id="eWeight" placeholder="70"/></div>
+            <div class="field-group"><label class="field-label">Target weight</label><input class="field-input" type="number" id="eTarget" placeholder="65"/></div>
+            <div class="field-group"><label class="field-label">Age</label><input class="field-input" type="number" id="eAge" placeholder="25"/></div>
+          </div>
+          <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+          <div id="editMsg" style="margin-top:.75rem;font-size:.83rem;font-weight:600;display:none;"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Goals Tab -->
+    <div class="tab-panel" id="tab-goals">
+      <div class="card">
+        <div class="sec-title">🎯 Fitness Goals</div>
+        <form id="goalsForm">
+          <div class="field-group">
+            <label class="field-label">Fitness goal</label>
+            <select class="field-select" id="gGoal">
+              <option value="lose">📉 Lose weight</option>
+              <option value="maintain">⚖️ Maintain weight</option>
+              <option value="gain">📈 Gain weight</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Activity level</label>
+            <select class="field-select" id="gActivity">
+              <option value="sedentary">🛋️ Sedentary</option>
+              <option value="light">🚶 Lightly active</option>
+              <option value="moderate">🏃 Moderately active</option>
+              <option value="very_active">🏋️ Very active</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Gender</label>
+            <select class="field-select" id="gGender">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Prefer not to say</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+            <div class="field-group"><label class="field-label">Daily calories</label><input class="field-input" type="number" id="gCal" placeholder="2000"/></div>
+            <div class="field-group"><label class="field-label">Daily protein (g)</label><input class="field-input" type="number" id="gPro" placeholder="100"/></div>
+          </div>
+          <button type="submit" class="btn btn-primary">🎯 Update Goals</button>
+          <div id="goalsMsg" style="margin-top:.75rem;font-size:.83rem;font-weight:600;display:none;"></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="sec-title">🔔 Notifications</div>
+        <div class="toggle-row"><div><div class="toggle-title">Meal planning reminders</div><div class="toggle-desc">Daily reminder to log your meals</div></div><label class="switch"><input type="checkbox" id="notMeal" checked/><span class="slider"></span></label></div>
+        <div class="toggle-row"><div><div class="toggle-title">Water intake reminders</div><div class="toggle-desc">Remind you to drink water</div></div><label class="switch"><input type="checkbox" id="notWater"/><span class="slider"></span></label></div>
+        <div class="toggle-row"><div><div class="toggle-title">Health tips</div><div class="toggle-desc">Weekly nutrition tips and recipes</div></div><label class="switch"><input type="checkbox" id="notTips" checked/><span class="slider"></span></label></div>
+      </div>
+    </div>
+
+    <!-- Sign out & Danger zone -->
+    <button class="btn btn-ghost" style="width:100%;margin-top:.5rem;color:var(--red);border-color:#fecaca;" onclick="logout()">🚪 Sign Out</button>
+
+    <div class="danger-zone">
+      <div class="danger-title">⚠️ Danger Zone</div>
+      <div class="danger-actions">
+        <button class="btn btn-danger btn-sm" onclick="resetAll()">🗑️ Reset all data</button>
+        <span class="danger-note">This permanently clears all your meal logs and settings.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bnav">
+    <button class="bnav-item" data-page="dashboard.html" onclick="location.href='dashboard.html'"><span class="bnav-icon">🏠</span><span class="bnav-lbl">Home</span></button>
+    <button class="bnav-item" data-page="meals.html" onclick="location.href='meals.html'"><span class="bnav-icon">🍽️</span><span class="bnav-lbl">Meals</span></button>
+    <button class="bnav-item" data-page="recipes.html" onclick="location.href='recipes.html'"><span class="bnav-icon">📖</span><span class="bnav-lbl">Recipes</span></button>
+    <button class="bnav-item active" data-page="profile.html" onclick="location.href='profile.html'"><span class="bnav-icon">👤</span><span class="bnav-lbl">Profile</span></button>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+  <script>
+    let profile = null;
+    let user = null;
+
+    function switchTab(t) {
+      document.querySelectorAll('.ptab').forEach((b,i)=>b.classList.toggle('active',['overview','edit','goals'][i]===t));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
+    }
+
+    function populateUI() {
+      if (!user) return;
+      const initials = ((user.firstName||'')[0]+(user.lastName||'')[0]).toUpperCase();
+      document.getElementById('avatarInitials').textContent = initials;
+      document.getElementById('heroName').textContent = `${user.firstName} ${user.lastName}`;
+      document.getElementById('heroEmail').textContent = user.email;
+      document.getElementById('ovName').textContent  = `${user.firstName} ${user.lastName}`;
+      document.getElementById('ovEmail').textContent = user.email;
+      document.getElementById('ovSince').textContent = new Date(user.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+      document.getElementById('eFn').value    = user.firstName;
+      document.getElementById('eLn').value    = user.lastName;
+      document.getElementById('eEmail').value = user.email;
+
+      if (profile) {
+        const goalMap = {lose:'Lose weight',maintain:'Maintain weight',gain:'Gain weight'};
+        const actMap  = {sedentary:'Sedentary',light:'Lightly active',moderate:'Moderately active',very_active:'Very active'};
+        document.getElementById('heroBMI').textContent  = 'BMI ' + (profile.bmi||'—');
+        document.getElementById('heroGoal').textContent = goalMap[profile.goal] || '—';
+        document.getElementById('heroCal').textContent  = (profile.dailyCalories||'—') + ' kcal/day';
+        document.getElementById('mBMI').textContent     = profile.bmi || '—';
+        document.getElementById('mCal').textContent     = profile.dailyCalories || '—';
+        document.getElementById('mPro').textContent     = (profile.dailyProtein||'—') + 'g';
+        document.getElementById('ovGoal').textContent     = goalMap[profile.goal] || '—';
+        document.getElementById('ovActivity').textContent = actMap[profile.activity] || '—';
+        document.getElementById('ovHeight').textContent   = profile.height ? profile.height + ' cm' : '—';
+        document.getElementById('ovWeight').textContent   = profile.weight ? profile.weight + ' kg' : '—';
+        document.getElementById('ovTarget').textContent   = profile.targetWeight ? profile.targetWeight + ' kg' : '—';
+        document.getElementById('ovAge').textContent      = profile.age ? profile.age + ' years' : '—';
+        document.getElementById('ovBMICat').textContent   = profile.bmiCategory || '—';
+        document.getElementById('eHeight').value = profile.height || '';
+        document.getElementById('eWeight').value = profile.weight || '';
+        document.getElementById('eTarget').value = profile.targetWeight || '';
+        document.getElementById('eAge').value    = profile.age || '';
+        document.getElementById('gGoal').value     = profile.goal || 'maintain';
+        document.getElementById('gActivity').value = profile.activity || 'moderate';
+        document.getElementById('gGender').value   = profile.gender || 'other';
+        document.getElementById('gCal').value      = profile.dailyCalories || '';
+        document.getElementById('gPro').value      = profile.dailyProtein || '';
+      }
+    }
+
+    function showFormMsg(id, msg, ok) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = 'block';
+      el.style.color = ok ? 'var(--o700)' : 'var(--red)';
+      setTimeout(()=>el.style.display='none', 3000);
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      try {
+        // Save profile updates
+        await api('/profile', { method:'POST', body: JSON.stringify({
+          height:       parseFloat(document.getElementById('eHeight').value)||undefined,
+          weight:       parseFloat(document.getElementById('eWeight').value)||undefined,
+          targetWeight: parseFloat(document.getElementById('eTarget').value)||undefined,
+          age:          parseInt(document.getElementById('eAge').value)||undefined,
+        })});
+        showFormMsg('editMsg', '✅ Changes saved!', true);
+        await loadProfile();
+        populateUI();
+      } catch(e) {
+        showFormMsg('editMsg', '⚠️ '+e.message, false);
+      }
+    });
+
+    document.getElementById('goalsForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      try {
+        await api('/profile', { method:'POST', body: JSON.stringify({
+          goal:          document.getElementById('gGoal').value,
+          activity:      document.getElementById('gActivity').value,
+          gender:        document.getElementById('gGender').value,
+          dailyCalories: parseInt(document.getElementById('gCal').value)||2000,
+          dailyProtein:  parseInt(document.getElementById('gPro').value)||100,
+        })});
+        showFormMsg('goalsMsg', '✅ Goals updated!', true);
+        await loadProfile();
+        populateUI();
+      } catch(e) {
+        showFormMsg('goalsMsg', '⚠️ '+e.message, false);
+      }
+    });
+
+   async function resetAll() {
+  if (!confirm('This will permanently delete ALL your meal logs, water logs and profile settings. Are you sure?')) return;
+
+  try {
+    // Delete all meals
+    await api('/meals/all', { method: 'DELETE' });
+    // Delete all water logs
+    await api('/water/all', { method: 'DELETE' });
+    // Delete profile
+    await api('/profile', { method: 'DELETE' });
+
+    toast('🗑️ All data cleared successfully!');
+
+    // Clear local storage
+    localStorage.removeItem('sm_user');
+
+    // Redirect to onboarding after 1.5 seconds
+    setTimeout(() => {
+      location.href = 'onboarding.html';
+    }, 1500);
+
+  } catch(e) {
+    toast('⚠️ Error: ' + e.message);
+  }
+}
+
+    async function loadProfile() {
+      try {
+        const data = await api('/profile');
+        profile = data.profile;
+      } catch {}
+    }
+
+    async function init() {
+      user = await requireLogin();
+      if (!user) return;
+      injectBadge(user);
+      await loadProfile();
+      populateUI();
+    }
+    init();
+  </script>
+</body>
+</html>

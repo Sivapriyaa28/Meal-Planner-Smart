@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartMeal — Meal Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="app.css"/>
+  <style>
+    .date-bar{display:flex;align-items:center;justify-content:space-between;background:var(--glass);backdrop-filter:blur(16px);border:1.5px solid var(--glass-b);border-radius:var(--r-full);padding:.6rem 1.25rem;margin-bottom:1rem;box-shadow:var(--sh);}
+    .dbn{background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--o600);padding:4px 10px;border-radius:var(--r-md);}
+    .date-txt{font-weight:700;font-size:.9rem;color:var(--n800);}
+    .total-bar{background:linear-gradient(135deg,rgba(234,88,12,.82),rgba(234,179,8,.7));border-radius:var(--r-xl);padding:1.1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border:1.5px solid rgba(255,255,255,.28);box-shadow:0 6px 24px rgba(234,88,12,.2);}
+    .total-lbl{font-size:.82rem;color:rgba(255,255,255,.82);font-weight:600;}
+    .total-val{font-family:var(--font-d);font-size:1.5rem;color:#fff;font-weight:800;}
+    .meal-sec{margin-bottom:1rem;}
+    .meal-sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem;}
+    .meal-sec-title{display:flex;align-items:center;gap:8px;font-family:var(--font-d);font-size:1rem;color:var(--n800);}
+    .mdot{width:9px;height:9px;border-radius:50%;}
+    .mdot-b{background:var(--y400);}.mdot-l{background:var(--o500);}.mdot-d{background:var(--blue);}
+    .drop-zone{
+      border:2px dashed rgba(249,115,22,.25);border-radius:var(--r-lg);
+      padding:1rem;text-align:center;color:var(--n400);font-size:.84rem;
+      transition:all .2s;min-height:60px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .drop-zone.over{
+      border-color:var(--o500);background:rgba(249,115,22,.12);
+      color:var(--o700);font-weight:700;
+      box-shadow:0 0 0 4px rgba(249,115,22,.2);
+      transform:scale(1.02);
+    }
+    .food-item{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.8rem .5rem;border-bottom:.5px solid rgba(255,255,255,.35);
+      border-radius:var(--r-md);
+      user-select:none;-webkit-user-select:none;
+      transition:opacity .2s,background .15s;
+    }
+    .food-item:last-child{border-bottom:none;}
+    .food-item.selected{
+      background:rgba(249,115,22,.1);
+      border-radius:var(--r-md);
+      outline:2px solid rgba(249,115,22,.4);
+    }
+    .food-emoji{font-size:1.35rem;}
+    .food-name{font-weight:600;font-size:.9rem;color:var(--n800);}
+    .food-macro{font-size:.73rem;color:var(--n400);}
+    .food-cal{font-size:.78rem;font-weight:700;color:var(--o600);background:rgba(249,115,22,.1);padding:3px 9px;border-radius:var(--r-full);}
+    .plus-btn{background:rgba(249,115,22,.12);border:none;cursor:pointer;font-size:.95rem;color:var(--o600);padding:5px 11px;border-radius:var(--r-full);font-weight:800;transition:all .18s;flex-shrink:0;}
+    .plus-btn:hover,.plus-btn:active{background:var(--o500);color:#fff;}
+
+    /* Step 2 banner - shown when food is selected */
+    .step-banner{
+      display:none;
+      position:sticky;bottom:64px;z-index:500;
+      background:linear-gradient(135deg,var(--o600),var(--o400));
+      color:#fff;border-radius:var(--r-xl);
+      padding:1rem 1.25rem;margin:0 0 .75rem;
+      box-shadow:0 8px 28px rgba(234,88,12,.4);
+      border:1.5px solid rgba(255,255,255,.25);
+      animation:slideUp .25s ease;
+    }
+    @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    .step-banner.show{display:block;}
+    .banner-food{font-family:var(--font-d);font-size:1rem;margin-bottom:.5rem;}
+    .banner-hint{font-size:.82rem;opacity:.88;margin-bottom:.75rem;}
+    .banner-btns{display:flex;gap:.6rem;flex-wrap:wrap;}
+    .banner-btn{
+      flex:1;padding:.65rem .5rem;border-radius:var(--r-full);
+      border:1.5px solid rgba(255,255,255,.4);
+      background:rgba(255,255,255,.18);
+      color:#fff;font-family:var(--font-b);font-size:.85rem;font-weight:700;
+      cursor:pointer;transition:all .18s;text-align:center;
+      backdrop-filter:blur(6px);
+    }
+    .banner-btn:hover,.banner-btn:active{background:rgba(255,255,255,.35);}
+    .banner-cancel{width:100%;margin-top:.5rem;padding:.5rem;border-radius:var(--r-full);border:1.5px solid rgba(255,255,255,.3);background:transparent;color:rgba(255,255,255,.8);font-family:var(--font-b);font-size:.82rem;font-weight:600;cursor:pointer;}
+
+    .search-bar{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.68);backdrop-filter:blur(16px);border:1.5px solid rgba(255,255,255,.88);border-radius:var(--r-full);padding:9px 18px;margin-bottom:1rem;}
+    .search-bar:focus-within{border-color:rgba(249,115,22,.4);box-shadow:0 0 0 3px rgba(249,115,22,.1);}
+    .search-inp{border:none;outline:none;background:transparent;font-family:var(--font-b);font-size:.92rem;color:var(--n900);flex:1;}
+    .search-inp::placeholder{color:var(--n400);}
+    .modal-bg{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;}
+    .modal-bg.open{display:flex;}
+    .modal{background:rgba(255,255,255,.96);border-radius:28px 28px 0 0;padding:1.75rem;width:100%;max-width:640px;animation:slideUp .3s ease;}
+    .modal-title{font-family:var(--font-d);font-size:1.2rem;color:var(--n800);margin-bottom:1.25rem;}
+    .modal-row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+  </style>
+</head>
+<body>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <nav class="navbar">
+    <div class="nav-inner" id="navInner">
+      <a class="nav-logo" href="dashboard.html"><span style="font-size:1.5rem;">🥗</span>SmartMeal</a>
+      <ul class="nav-links">
+        <li><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+        <li><a class="nav-link" href="meals.html">Meals</a></li>
+        <li><a class="nav-link" href="recipes.html">Recipes</a></li>
+        <li><a class="nav-link" href="profile.html">Profile</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <div class="date-bar">
+      <button class="dbn" onclick="changeDate(-1)">←</button>
+      <span class="date-txt" id="dateTxt"></span>
+      <button class="dbn" onclick="changeDate(1)">→</button>
+    </div>
+
+    <div class="total-bar">
+      <div><div class="total-lbl">Total today</div><div class="total-val"><span id="totalCal">0</span> kcal</div></div>
+      <div style="text-align:right;"><div class="total-lbl">Goal</div><div class="total-val"><span id="goalCal">2000</span> kcal</div></div>
+    </div>
+
+    <!-- MEAL ZONES -->
+    <div class="meal-sec">
+      <div class="meal-sec-head">
+        <div class="meal-sec-title"><div class="mdot mdot-b"></div>Breakfast<span class="badge badge-y" id="calB">0 kcal</span></div>
+        <button class="btn btn-outline btn-sm" onclick="openModal('breakfast')">+ Custom</button>
+      </div>
+      <div class="card" style="padding:1rem;">
+        <div class="drop-zone" id="zone-breakfast" onclick="dropToZone('breakfast')">🌅 Tap here after selecting food below</div>
+        <div id="items-breakfast"></div>
+      </div>
+    </div>
+
+    <div class="meal-sec">
+      <div class="meal-sec-head">
+        <div class="meal-sec-title"><div class="mdot mdot-l"></div>Lunch<span class="badge badge-o" id="calL">0 kcal</span></div>
+        <button class="btn btn-outline btn-sm" onclick="openModal('lunch')">+ Custom</button>
+      </div>
+      <div class="card" style="padding:1rem;">
+        <div class="drop-zone" id="zone-lunch" onclick="dropToZone('lunch')">☀️ Tap here after selecting food below</div>
+        <div id="items-lunch"></div>
+      </div>
+    </div>
+
+    <div class="meal-sec">
+      <div class="meal-sec-head">
+        <div class="meal-sec-title"><div class="mdot mdot-d"></div>Dinner<span class="badge badge-b" id="calD">0 kcal</span></div>
+        <button class="btn btn-outline btn-sm" onclick="openModal('dinner')">+ Custom</button>
+      </div>
+      <div class="card" style="padding:1rem;">
+        <div class="drop-zone" id="zone-dinner" onclick="dropToZone('dinner')">🌙 Tap here after selecting food below</div>
+        <div id="items-dinner"></div>
+      </div>
+    </div>
+
+    <!-- STICKY STEP 2 BANNER -->
+    <div class="step-banner" id="stepBanner">
+      <div class="banner-food" id="bannerFood">🥑 Avocado Toast selected</div>
+      <div class="banner-hint">Now scroll up and tap a meal zone above ↑ or pick below:</div>
+      <div class="banner-btns">
+        <button class="banner-btn" onclick="confirmDrop('breakfast')">🌅 Breakfast</button>
+        <button class="banner-btn" onclick="confirmDrop('lunch')">☀️ Lunch</button>
+        <button class="banner-btn" onclick="confirmDrop('dinner')">🌙 Dinner</button>
+      </div>
+      <button class="banner-cancel" onclick="cancelSelect()">✕ Cancel</button>
+    </div>
+
+    <!-- FOOD LIBRARY -->
+    <div class="card">
+      <div class="sec-title">🍴 Food Library</div>
+      <p style="font-size:.8rem;color:var(--n500);margin-bottom:.85rem;line-height:1.6;">
+        <b>Step 1:</b> Tap a food card to select it &nbsp;·&nbsp;
+        <b>Step 2:</b> Scroll up and tap a meal zone <em>or</em> use the quick buttons that appear
+      </p>
+      <div class="search-bar">
+        <span style="font-size:.9rem;">🔍</span>
+        <input class="search-inp" id="searchInp" placeholder="Search foods…" oninput="filterLib()"/>
+      </div>
+      <div id="foodLib"></div>
+    </div>
+
+  </div><!-- /page -->
+
+  <!-- Custom food modal -->
+  <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-title">Add custom food to <span id="modalType" style="color:var(--o600);"></span></div>
+      <div class="field-group"><label class="field-label">Food name</label><input class="field-input" id="mName" placeholder="e.g. Oatmeal"/></div>
+      <div class="modal-row">
+        <div class="field-group"><label class="field-label">Calories</label><input class="field-input" type="number" id="mCal" placeholder="320"/></div>
+        <div class="field-group"><label class="field-label">Protein (g)</label><input class="field-input" type="number" id="mPro" placeholder="12"/></div>
+        <div class="field-group"><label class="field-label">Carbs (g)</label><input class="field-input" type="number" id="mCarb" placeholder="48"/></div>
+        <div class="field-group"><label class="field-label">Fat (g)</label><input class="field-input" type="number" id="mFat" placeholder="8"/></div>
+      </div>
+      <div style="display:flex;gap:.7rem;margin-top:.5rem;">
+        <button class="btn btn-ghost" style="flex:1;" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" style="flex:2;" onclick="addFromModal()">Add Food</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bnav">
+    <button class="bnav-item" onclick="location.href='dashboard.html'"><span class="bnav-icon">🏠</span><span class="bnav-lbl">Home</span></button>
+    <button class="bnav-item active"><span class="bnav-icon">🍽️</span><span class="bnav-lbl">Meals</span></button>
+    <button class="bnav-item" onclick="location.href='recipes.html'"><span class="bnav-icon">📖</span><span class="bnav-lbl">Recipes</span></button>
+    <button class="bnav-item" onclick="location.href='profile.html'"><span class="bnav-icon">👤</span><span class="bnav-lbl">Profile</span></button>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+  <script>
+  const FOODS = [
+    {e:'🥑',n:'Avocado Toast',        cal:320,pro:10,carb:32,fat:18},
+    {e:'🥗',n:'Veggie Buddha Bowl',   cal:390,pro:15,carb:48,fat:14},
+    {e:'🍳',n:'Mushroom Omelette',    cal:280,pro:18,carb:6, fat:20},
+    {e:'🍗',n:'Grilled Chicken',      cal:410,pro:48,carb:4, fat:18},
+    {e:'🐟',n:'Salmon & Veggies',     cal:380,pro:40,carb:14,fat:18},
+    {e:'🍛',n:'Dal Tadka & Rice',     cal:420,pro:17,carb:68,fat:8 },
+    {e:'🫙',n:'Greek Yogurt Parfait', cal:210,pro:14,carb:28,fat:4 },
+    {e:'🥤',n:'Green Smoothie Bowl',  cal:180,pro:8, carb:32,fat:4 },
+    {e:'🥪',n:'Turkey Sandwich',      cal:340,pro:28,carb:36,fat:10},
+    {e:'🍝',n:'Spinach Pasta',        cal:440,pro:16,carb:72,fat:12},
+    {e:'🍜',n:'Chicken Soup',         cal:280,pro:26,carb:22,fat:8 },
+    {e:'🫐',n:'Berry Oat Bowl',       cal:220,pro:7, carb:40,fat:4 },
+    {e:'🥒',n:'Zucchini Noodles',     cal:160,pro:6, carb:18,fat:6 },
+    {e:'🍚',n:'Cauliflower Rice Bowl',cal:190,pro:12,carb:22,fat:6 },
+    {e:'🥩',n:'Beef Stir Fry',        cal:460,pro:38,carb:24,fat:22},
+  ];
+
+  let curDate   = new Date();
+  let curModal  = 'breakfast';
+  let mealData  = { breakfast:[], lunch:[], dinner:[] };
+  let selectedFood = null;
+  let selectedEl   = null;
+
+  /* ── date ── */
+  function getDateStr(){ return curDate.toISOString().split('T')[0]; }
+  function updateDateTxt(){
+    document.getElementById('dateTxt').textContent =
+      curDate.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+  }
+  function changeDate(d){ curDate.setDate(curDate.getDate()+d); updateDateTxt(); loadMeals(); }
+
+  /* ── render library ── */
+  function renderLib(foods){
+    document.getElementById('foodLib').innerHTML = foods.map((f,i)=>`
+      <div class="food-item" data-idx="${i}" onclick="selectFood(${i}, this)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="food-emoji">${f.e}</span>
+          <div>
+            <div class="food-name">${f.n}</div>
+            <div class="food-macro">P:${f.pro}g · C:${f.carb}g · F:${f.fat}g</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="food-cal">${f.cal} kcal</span>
+          <button class="plus-btn" onclick="event.stopPropagation();quickSelect(${i})">+</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function filterLib(){
+    const q = document.getElementById('searchInp').value.toLowerCase();
+    renderLib(FOODS.filter(f=>f.n.toLowerCase().includes(q)));
+  }
+
+  /* ── SELECT FOOD (tap on card) ── */
+  function selectFood(idx, el){
+    // deselect previous
+    if(selectedEl) selectedEl.classList.remove('selected');
+
+    if(selectedFood && selectedFood === FOODS[idx]){
+      // tapping same food deselects
+      cancelSelect();
+      return;
+    }
+
+    selectedFood = FOODS[idx];
+    selectedEl   = el;
+    el.classList.add('selected');
+
+    // Show sticky banner
+    document.getElementById('bannerFood').textContent = selectedFood.e + ' ' + selectedFood.n + ' selected';
+    document.getElementById('stepBanner').classList.add('show');
+
+    // Highlight all drop zones
+    document.querySelectorAll('.drop-zone').forEach(z=>{
+      z.style.borderColor = 'rgba(249,115,22,.5)';
+      z.style.background  = 'rgba(249,115,22,.05)';
+    });
+
+    toast('✅ Selected! Now scroll up and tap a meal zone');
+  }
+
+  /* quick + button */
+  function quickSelect(idx){
+    selectFood(idx, document.querySelector(`.food-item[data-idx="${idx}"]`));
+  }
+
+  function cancelSelect(){
+    selectedFood = null;
+    if(selectedEl){ selectedEl.classList.remove('selected'); selectedEl=null; }
+    document.getElementById('stepBanner').classList.remove('show');
+    document.querySelectorAll('.drop-zone').forEach(z=>{
+      z.style.borderColor = '';
+      z.style.background  = '';
+    });
+  }
+
+  /* ── DROP TO ZONE (tap zone after selecting) ── */
+  function dropToZone(type){
+    if(!selectedFood){
+      toast('👆 First tap a food from the library below');
+      // scroll to food library
+      document.getElementById('foodLib').scrollIntoView({behavior:'smooth'});
+      return;
+    }
+    saveMeal(type, selectedFood);
+    cancelSelect();
+  }
+
+  /* ── banner quick buttons ── */
+  function confirmDrop(type){
+    if(selectedFood) saveMeal(type, selectedFood);
+    cancelSelect();
+  }
+
+  /* ── save / remove ── */
+  async function saveMeal(type, food){
+    try{
+      const data = await api('/meals',{method:'POST',body:JSON.stringify({
+        mealType:type, foodName:food.n||food.name,
+        calories:food.cal||0, protein:food.pro||0,
+        carbs:food.carb||0,   fat:food.fat||0,
+        quantity:100, date:getDateStr()
+      })});
+      mealData[type].push(data.meal);
+      renderItems(type); updateTotals();
+      toast('✅ '+(food.n||food.name)+' → '+type+'!');
+    }catch(err){ toast('⚠️ '+err.message); }
+  }
+
+  async function removeMeal(id, type){
+    try{
+      await api('/meals/'+id,{method:'DELETE'});
+      mealData[type]=mealData[type].filter(m=>m._id!==id);
+      renderItems(type); updateTotals();
+      toast('Removed from '+type);
+    }catch(err){ toast('⚠️ '+err.message); }
+  }
+
+  function renderItems(type){
+    const c=document.getElementById('items-'+type);
+    c.innerHTML='';
+    mealData[type].forEach(item=>{
+      const d=document.createElement('div');
+      d.className='dropped-item';
+      d.innerHTML=`<div><span style="font-weight:600;color:var(--n800);">${item.foodName}</span> <span style="font-size:.75rem;color:var(--o500);font-weight:700;">${item.calories} kcal</span></div><span class="remove-x" onclick="removeMeal('${item._id}','${type}')">×</span>`;
+      c.appendChild(d);
+    });
+  }
+
+  function updateTotals(){
+    let total=0;
+    ['breakfast','lunch','dinner'].forEach(t=>{
+      const cal=mealData[t].reduce((s,i)=>s+(i.calories||0),0);
+      document.getElementById('cal'+t.charAt(0).toUpperCase()).textContent=cal+' kcal';
+      total+=cal;
+    });
+    document.getElementById('totalCal').textContent=total;
+  }
+
+  async function loadMeals(){
+    mealData={breakfast:[],lunch:[],dinner:[]};
+    try{
+      const data=await api('/meals?date='+getDateStr());
+      (data.meals||[]).forEach(m=>{ if(mealData[m.mealType]) mealData[m.mealType].push(m); });
+    }catch{}
+    ['breakfast','lunch','dinner'].forEach(renderItems);
+    updateTotals();
+  }
+
+  /* ── custom modal ── */
+  function openModal(type){
+    curModal=type;
+    document.getElementById('modalType').textContent=type.charAt(0).toUpperCase()+type.slice(1);
+    document.getElementById('modalBg').classList.add('open');
+  }
+  function closeModal(){
+    document.getElementById('modalBg').classList.remove('open');
+    ['mName','mCal','mPro','mCarb','mFat'].forEach(id=>document.getElementById(id).value='');
+  }
+  async function addFromModal(){
+    const name=document.getElementById('mName').value.trim();
+    if(!name){ toast('Please enter a food name'); return; }
+    closeModal();
+    await saveMeal(curModal,{
+      n:name,
+      cal:parseInt(document.getElementById('mCal').value)||0,
+      pro:parseInt(document.getElementById('mPro').value)||0,
+      carb:parseInt(document.getElementById('mCarb').value)||0,
+      fat:parseInt(document.getElementById('mFat').value)||0,
+    });
+  }
+
+  /* ── init ── */
+  async function init(){
+    const user=await requireLogin();
+    if(!user) return;
+    injectBadge(user);
+    updateDateTxt();
+    renderLib(FOODS);
+    await loadMeals();
+    try{
+      const pd=await api('/profile');
+      if(pd.profile?.dailyCalories)
+        document.getElementById('goalCal').textContent=pd.profile.dailyCalories;
+    }catch{}
+  }
+  init();
+  </script>
+</body>
+</html>

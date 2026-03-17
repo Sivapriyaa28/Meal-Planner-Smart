@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartMeal — Recipes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="app.css"/>
+  <style>
+    .search-bar{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.68);backdrop-filter:blur(16px);border:1.5px solid rgba(255,255,255,.88);border-radius:var(--r-full);padding:9px 18px;margin-bottom:1rem;transition:all .18s;}
+    .search-bar:focus-within{border-color:rgba(249,115,22,.4);box-shadow:0 0 0 3px rgba(249,115,22,.1);}
+    .search-inp{border:none;outline:none;background:transparent;font-family:var(--font-b);font-size:.92rem;color:var(--n900);flex:1;}
+    .search-inp::placeholder{color:var(--n400);}
+
+    .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;}
+    .fbtn{padding:7px 15px;border-radius:var(--r-full);border:1.5px solid rgba(255,255,255,.82);background:rgba(255,255,255,.55);backdrop-filter:blur(10px);font-size:.82rem;font-weight:700;cursor:pointer;color:var(--n600);transition:all .18s;}
+    .fbtn:hover{border-color:rgba(249,115,22,.35);color:var(--o600);}
+    .fbtn.active{background:linear-gradient(135deg,var(--o600),var(--o400));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(234,88,12,.26);}
+
+    .recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;}
+    .recipe-card{
+      background:rgba(255,255,255,.6);backdrop-filter:blur(20px);
+      border:1.5px solid rgba(255,255,255,.85);border-radius:var(--r-xl);
+      overflow:hidden;cursor:pointer;transition:all .22s;
+      box-shadow:var(--sh);
+    }
+    .recipe-card:hover{transform:translateY(-5px) scale(1.01);box-shadow:var(--sh-lg);border-color:rgba(249,115,22,.3);}
+    .recipe-img{height:130px;display:flex;align-items:center;justify-content:center;font-size:3.8rem;background:linear-gradient(145deg,rgba(255,237,213,.8),rgba(254,243,199,.8));}
+    .recipe-body{padding:12px 14px 14px;}
+    .recipe-head{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px;}
+    .recipe-name{font-weight:700;font-size:.92rem;color:var(--n800);line-height:1.3;flex:1;}
+    .recipe-tag{font-size:.6rem;font-weight:800;padding:3px 8px;border-radius:var(--r-full);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;flex-shrink:0;}
+    .tag-veg{background:rgba(34,197,94,.12);color:#15803d;}
+    .tag-non{background:rgba(249,115,22,.12);color:var(--o700);}
+    .tag-diet{background:rgba(59,130,246,.1);color:#1d4ed8;}
+    .recipe-cal{font-size:.78rem;color:var(--o600);font-weight:700;margin-bottom:6px;}
+    .macro-row{display:flex;gap:5px;flex-wrap:wrap;}
+    .mp{font-size:.67rem;font-weight:700;padding:2px 7px;border-radius:var(--r-full);}
+    .mp-p{background:rgba(59,130,246,.1);color:#1d4ed8;}
+    .mp-c{background:rgba(234,179,8,.12);color:#92400e;}
+    .mp-f{background:rgba(239,68,68,.1);color:#b91c1c;}
+
+    .meta-txt{font-size:.82rem;color:var(--n400);font-weight:500;margin-bottom:1rem;}
+    .no-results{text-align:center;padding:3rem;color:var(--n400);}
+    .no-results span{font-size:2.5rem;display:block;margin-bottom:.5rem;}
+
+    /* Recipe Detail Modal */
+    .modal-bg{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:1rem;}
+    .modal-bg.open{display:flex;}
+    .modal{background:rgba(255,255,255,.95);backdrop-filter:blur(24px);border-radius:var(--r-xl);padding:2rem;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:scaleIn .3s cubic-bezier(.34,1.56,.64,1);}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+    .modal-close{float:right;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--n400);transition:color .18s;}
+    .modal-close:hover{color:var(--n800);}
+    .modal-emoji{font-size:5rem;text-align:center;display:block;margin-bottom:1rem;}
+    .modal-name{font-family:var(--font-d);font-size:1.6rem;color:var(--n900);margin-bottom:.5rem;}
+    .modal-macros{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.5rem;margin:1rem 0;}
+    .mm{background:rgba(255,255,255,.6);border:1.5px solid rgba(255,255,255,.85);border-radius:var(--r-md);padding:.65rem;text-align:center;}
+    .mm-val{font-family:var(--font-d);font-size:1.1rem;font-weight:800;display:block;color:var(--o600);}
+    .mm-lbl{font-size:.66rem;font-weight:700;color:var(--n400);text-transform:uppercase;letter-spacing:.04em;}
+    .modal-section{margin-bottom:1rem;}
+    .modal-section-title{font-size:.8rem;font-weight:800;color:var(--n500);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;}
+    .ingredient-item{display:flex;align-items:center;gap:8px;padding:.4rem 0;border-bottom:.5px solid rgba(255,255,255,.5);font-size:.88rem;color:var(--n700);}
+    .ingredient-item:last-child{border-bottom:none;}
+    .ingredient-item::before{content:'•';color:var(--o400);font-size:1rem;}
+    .step-item{display:flex;gap:10px;padding:.5rem 0;font-size:.88rem;color:var(--n700);}
+    .step-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--o600),var(--o400));color:#fff;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+    .add-to-meal-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;}
+  </style>
+</head>
+<body>
+  <div class="orb orb1"></div><div class="orb orb2"></div>
+
+  <nav class="navbar">
+    <div class="nav-inner" id="navInner">
+      <a class="nav-logo" href="dashboard.html"><span style="font-size:1.5rem;">🥗</span>SmartMeal</a>
+      <ul class="nav-links">
+        <li><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+        <li><a class="nav-link" href="meals.html">Meals</a></li>
+        <li><a class="nav-link" href="recipes.html">Recipes</a></li>
+        <li><a class="nav-link" href="profile.html">Profile</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page wide">
+    <div style="margin-bottom:1.5rem;">
+      <div style="font-family:var(--font-d);font-size:1.8rem;color:var(--n900);margin-bottom:.3rem;">Recipe Library 📖</div>
+      <div style="color:var(--n400);font-size:.9rem;">36 healthy recipes — click any card to view details & add to meals</div>
+    </div>
+
+    <div class="search-bar"><span style="font-size:.9rem;">🔍</span><input class="search-inp" id="searchInp" placeholder="Search recipes…" oninput="render()"/></div>
+
+    <div class="filter-row" id="filterRow">
+      <button class="fbtn active" data-f="all"     onclick="setFilter(this,'all')">All</button>
+      <button class="fbtn"        data-f="veg"     onclick="setFilter(this,'veg')">🥦 Veg</button>
+      <button class="fbtn"        data-f="non-veg" onclick="setFilter(this,'non-veg')">🍗 Non-Veg</button>
+      <button class="fbtn"        data-f="diet"    onclick="setFilter(this,'diet')">🥗 Diet</button>
+    </div>
+
+    <div class="meta-txt" id="metaTxt"></div>
+    <div class="recipe-grid" id="recipeGrid"></div>
+  </div>
+
+  <!-- Recipe Detail Modal -->
+  <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+    <div class="modal" id="modalContent"></div>
+  </div>
+
+  <nav class="bnav">
+    <button class="bnav-item" data-page="dashboard.html" onclick="location.href='dashboard.html'"><span class="bnav-icon">🏠</span><span class="bnav-lbl">Home</span></button>
+    <button class="bnav-item" data-page="meals.html" onclick="location.href='meals.html'"><span class="bnav-icon">🍽️</span><span class="bnav-lbl">Meals</span></button>
+    <button class="bnav-item active" data-page="recipes.html" onclick="location.href='recipes.html'"><span class="bnav-icon">📖</span><span class="bnav-lbl">Recipes</span></button>
+    <button class="bnav-item" data-page="profile.html" onclick="location.href='profile.html'"><span class="bnav-icon">👤</span><span class="bnav-lbl">Profile</span></button>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+  <script>
+    const RECIPES = [
+      // Vegetarian
+      {id:1,  name:'Avocado Toast',        emoji:'🥑', type:'veg',     cal:320, pro:10, carb:32, fat:18, time:'10 min',
+       ingredients:['2 slices sourdough bread','1 ripe avocado','2 eggs (poached)','Chilli flakes','Salt & pepper','Lemon juice'],
+       steps:['Toast the bread until golden.','Mash avocado with lemon juice, salt and pepper.','Poach eggs in simmering water for 3 minutes.','Spread avocado on toast, top with poached egg.','Sprinkle chilli flakes and serve.']},
+      {id:2,  name:'Veggie Buddha Bowl',   emoji:'🥗', type:'veg',     cal:390, pro:15, carb:48, fat:14, time:'20 min',
+       ingredients:['1 cup cooked quinoa','Roasted chickpeas','Mixed greens','Cherry tomatoes','Cucumber','Tahini dressing'],
+       steps:['Cook quinoa and let it cool.','Roast chickpeas with olive oil and spices at 200°C for 25 min.','Assemble bowl with all vegetables.','Drizzle tahini dressing and serve.']},
+      {id:3,  name:'Paneer Tikka',         emoji:'🧀', type:'veg',     cal:340, pro:20, carb:14, fat:22, time:'30 min',
+       ingredients:['250g paneer cubes','1 cup yogurt','Tikka spice mix','Bell peppers','Onion','Lemon'],
+       steps:['Marinate paneer in yogurt and spices for 30 min.','Thread on skewers with peppers and onion.','Grill or bake at 220°C for 15 min.','Serve with mint chutney and lemon.']},
+      {id:4,  name:'Mushroom Omelette',    emoji:'🍳', type:'veg',     cal:280, pro:18, carb:6,  fat:20, time:'15 min',
+       ingredients:['3 eggs','100g mushrooms','1 tbsp butter','Fresh herbs','Salt & pepper'],
+       steps:['Beat eggs with salt and pepper.','Sauté mushrooms in butter for 5 min.','Pour eggs into pan, add mushrooms.','Fold omelette when set, serve immediately.']},
+      {id:5,  name:'Dal Tadka with Rice',  emoji:'🍛', type:'veg',     cal:420, pro:17, carb:68, fat:8,  time:'35 min',
+       ingredients:['1 cup yellow lentils','2 cups basmati rice','Onion, tomato, garlic','Cumin, turmeric','Ghee','Fresh coriander'],
+       steps:['Cook lentils until soft.','Prepare tadka: fry cumin, onion, garlic, tomato in ghee.','Mix tadka into lentils, simmer 10 min.','Cook rice separately, serve together.']},
+      {id:6,  name:'Caprese Salad',        emoji:'🍅', type:'veg',     cal:220, pro:12, carb:10, fat:15, time:'10 min',
+       ingredients:['250g mozzarella','4 ripe tomatoes','Fresh basil','Olive oil','Balsamic glaze','Salt & pepper'],
+       steps:['Slice mozzarella and tomatoes to same thickness.','Layer alternating on a plate.','Top with fresh basil leaves.','Drizzle olive oil and balsamic glaze.']},
+      {id:7,  name:'Spinach Pasta',        emoji:'🍝', type:'veg',     cal:440, pro:16, carb:72, fat:12, time:'25 min',
+       ingredients:['300g pasta','200g fresh spinach','3 garlic cloves','Parmesan','Olive oil','Pine nuts'],
+       steps:['Cook pasta al dente.','Sauté garlic in olive oil, add spinach.','Toss pasta with spinach, parmesan and pine nuts.','Season and serve.']},
+      {id:8,  name:'Greek Yogurt Parfait', emoji:'🫙', type:'veg',     cal:210, pro:14, carb:28, fat:4,  time:'5 min',
+       ingredients:['200g Greek yogurt','Mixed berries','2 tbsp granola','Honey','Mint leaves'],
+       steps:['Layer yogurt in a glass.','Add berries and granola.','Drizzle honey on top.','Garnish with mint and serve.']},
+      {id:9,  name:'Lentil Soup',          emoji:'🍲', type:'veg',     cal:310, pro:18, carb:44, fat:6,  time:'40 min',
+       ingredients:['1 cup red lentils','Onion, carrot, celery','Cumin, paprika','Vegetable stock','Lemon juice','Olive oil'],
+       steps:['Sauté vegetables in olive oil.','Add lentils and stock, bring to boil.','Simmer 25 min until lentils are soft.','Blend partially, season and add lemon.']},
+      {id:10, name:'Tofu Scramble',        emoji:'🥚', type:'veg',     cal:260, pro:20, carb:12, fat:14, time:'15 min',
+       ingredients:['300g firm tofu','Turmeric, cumin','Bell peppers','Spinach','Nutritional yeast','Olive oil'],
+       steps:['Crumble tofu into pan with oil.','Add spices and cook 5 min.','Add peppers and spinach, cook 5 more min.','Stir in nutritional yeast and serve.']},
+      {id:11, name:'Cheese Quesadilla',    emoji:'🫓', type:'veg',     cal:370, pro:15, carb:38, fat:18, time:'15 min',
+       ingredients:['2 large tortillas','150g mixed cheese','Salsa','Sour cream','Jalapeños'],
+       steps:['Lay tortilla flat, add cheese and jalapeños.','Top with second tortilla.','Cook in dry pan 3 min each side until golden.','Cut into wedges, serve with salsa.']},
+      {id:12, name:'Veggie Stir Fry',      emoji:'🥦', type:'veg',     cal:250, pro:9,  carb:34, fat:9,  time:'20 min',
+       ingredients:['Broccoli, snap peas, carrots','Soy sauce','Ginger, garlic','Sesame oil','Cornstarch','Spring onions'],
+       steps:['Heat wok until very hot.','Stir fry vegetables 5 min on high heat.','Add sauce mixture, toss to coat.','Garnish with spring onions and sesame seeds.']},
+      // Non-Veg
+      {id:13, name:'Grilled Chicken',      emoji:'🍗', type:'non-veg', cal:410, pro:48, carb:4,  fat:18, time:'25 min',
+       ingredients:['2 chicken breasts','Olive oil','Garlic powder','Smoked paprika','Lemon','Fresh herbs'],
+       steps:['Marinate chicken with oil, garlic, paprika and lemon.','Preheat grill to medium-high.','Grill 6-7 min each side until cooked through.','Rest 5 min before serving.']},
+      {id:14, name:'Salmon with Veggies',  emoji:'🐟', type:'non-veg', cal:380, pro:40, carb:14, fat:18, time:'30 min',
+       ingredients:['2 salmon fillets','Asparagus','Cherry tomatoes','Olive oil','Dill','Lemon'],
+       steps:['Season salmon with salt, pepper and dill.','Arrange vegetables on baking tray.','Place salmon on top, drizzle olive oil.','Bake at 200°C for 15-18 min.']},
+      {id:15, name:'Chicken Tacos',        emoji:'🌮', type:'non-veg', cal:490, pro:32, carb:44, fat:20, time:'30 min',
+       ingredients:['500g chicken thighs','Taco spice mix','Corn tortillas','Avocado','Salsa','Lime'],
+       steps:['Season chicken with taco spices.','Cook chicken in pan 6-8 min each side.','Shred chicken with two forks.','Warm tortillas, assemble with toppings.']},
+      {id:16, name:'Prawn Curry',          emoji:'🍤', type:'non-veg', cal:360, pro:30, carb:18, fat:16, time:'25 min',
+       ingredients:['400g prawns','Coconut milk','Onion, garlic, ginger','Curry paste','Coriander','Basmati rice'],
+       steps:['Sauté onion, garlic and ginger.','Add curry paste, cook 2 min.','Pour in coconut milk, simmer 5 min.','Add prawns, cook 4 min, garnish coriander.']},
+      {id:17, name:'Turkey Sandwich',      emoji:'🥪', type:'non-veg', cal:340, pro:28, carb:36, fat:10, time:'10 min',
+       ingredients:['2 slices wholegrain bread','100g turkey breast','Lettuce, tomato','Mustard','Avocado','Salt & pepper'],
+       steps:['Toast bread lightly.','Layer turkey, lettuce, tomato and avocado.','Spread mustard on bread.','Season and serve.']},
+      {id:18, name:'BBQ Chicken Bowl',     emoji:'🍗', type:'non-veg', cal:500, pro:44, carb:38, fat:18, time:'30 min',
+       ingredients:['2 chicken breasts','BBQ sauce','Cooked rice','Corn','Red onion','Coriander'],
+       steps:['Marinate chicken in BBQ sauce 30 min.','Grill until caramelised and cooked through.','Slice and serve over rice with corn and onion.']},
+      {id:19, name:'Beef Stir Fry',        emoji:'🥩', type:'non-veg', cal:460, pro:38, carb:24, fat:22, time:'20 min',
+       ingredients:['400g beef strips','Broccoli, snap peas','Oyster sauce','Soy sauce','Ginger, garlic','Sesame oil'],
+       steps:['Marinate beef in soy and oyster sauce.','Stir fry beef in very hot wok 3 min.','Add vegetables and sauce, toss 3 min.','Drizzle sesame oil and serve with rice.']},
+      {id:20, name:'Lamb Kebabs',          emoji:'🍢', type:'non-veg', cal:430, pro:36, carb:10, fat:24, time:'35 min',
+       ingredients:['500g minced lamb','Onion, garlic','Cumin, coriander','Fresh mint','Yogurt dip','Flatbread'],
+       steps:['Mix lamb with spices and onion.','Shape onto skewers.','Grill on high heat 8-10 min turning.','Serve with yogurt dip and flatbread.']},
+      {id:21, name:'Chicken Soup',         emoji:'🍜', type:'non-veg', cal:280, pro:26, carb:22, fat:8,  time:'45 min',
+       ingredients:['2 chicken breasts','Carrots, celery, onion','Chicken stock','Egg noodles','Parsley','Bay leaf'],
+       steps:['Simmer chicken in stock with vegetables.','Remove chicken, shred it.','Add noodles to simmering broth.','Return chicken, season and garnish with parsley.']},
+      {id:22, name:'Tuna Pasta',           emoji:'🍝', type:'non-veg', cal:450, pro:36, carb:52, fat:12, time:'20 min',
+       ingredients:['300g pasta','2 cans tuna','Olive oil','Garlic','Capers','Lemon zest'],
+       steps:['Cook pasta al dente.','Sauté garlic in olive oil.','Add tuna, capers and lemon zest.','Toss with pasta, season and serve.']},
+      {id:23, name:'Fish & Sweet Potato',  emoji:'🐠', type:'non-veg', cal:390, pro:34, carb:38, fat:10, time:'35 min',
+       ingredients:['2 white fish fillets','2 sweet potatoes','Olive oil','Paprika','Lemon','Green beans'],
+       steps:['Cut sweet potato into wedges, toss with oil and paprika.','Roast 25 min at 200°C.','Season fish and pan-fry 4 min each side.','Serve with green beans.']},
+      {id:24, name:'Egg Fried Rice',       emoji:'🍳', type:'non-veg', cal:420, pro:16, carb:60, fat:14, time:'20 min',
+       ingredients:['2 cups cooked rice','3 eggs','Spring onions','Soy sauce','Sesame oil','Frozen peas'],
+       steps:['Heat oil in wok on high heat.','Add rice and fry until crispy edges form.','Push aside, scramble eggs in center.','Mix together, add soy sauce and peas.']},
+      // Diet
+      {id:25, name:'Green Smoothie Bowl',  emoji:'🥤', type:'diet',    cal:180, pro:8,  carb:32, fat:4,  time:'5 min',
+       ingredients:['1 banana','Handful spinach','Almond milk','Toppings: granola, berries, chia seeds'],
+       steps:['Blend banana, spinach and almond milk until smooth.','Pour into bowl.','Add toppings and serve immediately.']},
+      {id:26, name:'Zucchini Noodles',     emoji:'🥒', type:'diet',    cal:160, pro:6,  carb:18, fat:6,  time:'15 min',
+       ingredients:['2 zucchini','Cherry tomatoes','Basil pesto','Parmesan','Pine nuts'],
+       steps:['Spiralize zucchini into noodles.','Toss with pesto.','Top with cherry tomatoes, parmesan and pine nuts.']},
+      {id:27, name:'Cauliflower Rice Bowl',emoji:'🍚', type:'diet',    cal:190, pro:12, carb:22, fat:6,  time:'20 min',
+       ingredients:['1 head cauliflower','Edamame','Cucumber','Avocado','Soy sauce','Sesame seeds'],
+       steps:['Pulse cauliflower in food processor until rice-sized.','Cook in pan 5 min until golden.','Assemble bowl with toppings.','Drizzle soy sauce and sesame oil.']},
+      {id:28, name:'Chia Pudding',         emoji:'🍮', type:'diet',    cal:200, pro:6,  carb:26, fat:9,  time:'5 min',
+       ingredients:['4 tbsp chia seeds','1 cup almond milk','Honey','Vanilla extract','Mixed berries'],
+       steps:['Mix chia seeds with almond milk, honey and vanilla.','Refrigerate overnight or 4 hours minimum.','Top with mixed berries and serve.']},
+      {id:29, name:'Baked Cod & Greens',   emoji:'🐡', type:'diet',    cal:240, pro:32, carb:8,  fat:8,  time:'25 min',
+       ingredients:['2 cod fillets','Broccoli, kale','Olive oil','Garlic','Lemon','Capers'],
+       steps:['Season cod with salt, pepper and lemon.','Bake at 190°C for 15 min.','Steam broccoli and kale 5 min.','Serve cod on greens, garnish with capers.']},
+      {id:30, name:'Quinoa Salad',         emoji:'🥙', type:'diet',    cal:280, pro:10, carb:42, fat:8,  time:'20 min',
+       ingredients:['1 cup quinoa','Cucumber, tomatoes','Feta','Olives','Lemon dressing','Fresh mint'],
+       steps:['Cook quinoa, let cool.','Chop all vegetables.','Mix everything together.','Add dressing and crumbled feta.']},
+      {id:31, name:'Berry Oat Bowl',       emoji:'🫐', type:'diet',    cal:220, pro:7,  carb:40, fat:4,  time:'10 min',
+       ingredients:['80g rolled oats','Almond milk','Mixed berries','Banana','Chia seeds','Honey'],
+       steps:['Cook oats in almond milk 5 min.','Slice banana, wash berries.','Top oats with fruit and chia seeds.','Drizzle honey and serve.']},
+      {id:32, name:'Steamed Edamame',      emoji:'🫛', type:'diet',    cal:190, pro:16, carb:14, fat:6,  time:'10 min',
+       ingredients:['300g edamame in pods','Sea salt','Sesame oil','Chilli flakes','Lemon juice'],
+       steps:['Steam edamame 5 min.','Drain and season with salt.','Drizzle sesame oil and lemon.','Sprinkle chilli flakes and serve.']},
+      {id:33, name:'Miso Soup & Tofu',     emoji:'🍜', type:'diet',    cal:150, pro:10, carb:12, fat:5,  time:'10 min',
+       ingredients:['2 tbsp white miso','200g silken tofu','Wakame seaweed','Spring onions','Dashi stock'],
+       steps:['Heat dashi stock.','Whisk in miso paste off heat.','Add tofu cubes and rehydrated wakame.','Garnish with spring onions.']},
+      {id:34, name:'Apple & Almond Butter',emoji:'🍎', type:'diet',    cal:200, pro:5,  carb:28, fat:10, time:'5 min',
+       ingredients:['2 apples','4 tbsp almond butter','Cinnamon','Chia seeds','Honey'],
+       steps:['Core and slice apples.','Arrange on plate.','Drizzle almond butter.','Sprinkle cinnamon and chia seeds.']},
+      {id:35, name:'Kale Caesar Salad',    emoji:'🥬', type:'diet',    cal:230, pro:8,  carb:18, fat:14, time:'15 min',
+       ingredients:['200g kale','Caesar dressing','Parmesan','Croutons','Lemon'],
+       steps:['Massage kale with a pinch of salt for 2 min.','Toss with Caesar dressing.','Top with parmesan and croutons.','Squeeze lemon and serve.']},
+      {id:36, name:'Cucumber & Hummus',    emoji:'🫔', type:'diet',    cal:210, pro:9,  carb:28, fat:8,  time:'10 min',
+       ingredients:['1 cucumber','150g hummus','Pita bread','Paprika','Olive oil','Parsley'],
+       steps:['Slice cucumber into sticks.','Warm pita bread.','Plate hummus, drizzle olive oil and paprika.','Serve with cucumber sticks and pita.']},
+    ];
+
+    let curFilter = 'all';
+
+    function setFilter(btn, f) {
+      document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      curFilter = f;
+      render();
+    }
+
+    function render() {
+      const q = document.getElementById('searchInp').value.toLowerCase();
+      const filtered = RECIPES.filter(r => {
+        const matchF = curFilter === 'all' || r.type === curFilter;
+        const matchQ = r.name.toLowerCase().includes(q);
+        return matchF && matchQ;
+      });
+
+      document.getElementById('metaTxt').textContent = `Showing ${filtered.length} of ${RECIPES.length} recipes`;
+
+      const grid = document.getElementById('recipeGrid');
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="no-results"><span>🔍</span>No recipes found. Try a different search.</div>';
+        return;
+      }
+
+      const tagMap = { veg:'Veg', 'non-veg':'Non-Veg', diet:'Diet' };
+      const tagClass = { veg:'tag-veg', 'non-veg':'tag-non', diet:'tag-diet' };
+
+      grid.innerHTML = filtered.map(r => `
+        <div class="recipe-card" onclick="openRecipe(${r.id})">
+          <div class="recipe-img">${r.emoji}</div>
+          <div class="recipe-body">
+            <div class="recipe-head">
+              <div class="recipe-name">${r.name}</div>
+              <span class="recipe-tag ${tagClass[r.type]}">${tagMap[r.type]}</span>
+            </div>
+            <div class="recipe-cal">🔥 ${r.cal} kcal · ⏱ ${r.time}</div>
+            <div class="macro-row">
+              <span class="mp mp-p">💪 ${r.pro}g</span>
+              <span class="mp mp-c">🌾 ${r.carb}g</span>
+              <span class="mp mp-f">🫒 ${r.fat}g</span>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    function openRecipe(id) {
+      const r = RECIPES.find(x=>x.id===id);
+      if (!r) return;
+      const mc = document.getElementById('modalContent');
+      mc.innerHTML = `
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <span class="modal-emoji">${r.emoji}</span>
+        <div class="modal-name">${r.name}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.5rem;">
+          <span class="badge badge-o">🔥 ${r.cal} kcal</span>
+          <span class="badge badge-b">⏱ ${r.time}</span>
+        </div>
+        <div class="modal-macros">
+          <div class="mm"><span class="mm-val">${r.pro}g</span><span class="mm-lbl">Protein</span></div>
+          <div class="mm"><span class="mm-val">${r.carb}g</span><span class="mm-lbl">Carbs</span></div>
+          <div class="mm"><span class="mm-val">${r.fat}g</span><span class="mm-lbl">Fat</span></div>
+          <div class="mm"><span class="mm-val">${r.cal}</span><span class="mm-lbl">Kcal</span></div>
+        </div>
+        <div class="modal-section">
+          <div class="modal-section-title">Ingredients</div>
+          ${r.ingredients.map(i=>`<div class="ingredient-item">${i}</div>`).join('')}
+        </div>
+        <div class="modal-section">
+          <div class="modal-section-title">Steps</div>
+          ${r.steps.map((s,i)=>`<div class="step-item"><div class="step-num">${i+1}</div><div>${s}</div></div>`).join('')}
+        </div>
+        <div class="add-to-meal-row">
+          <div style="font-size:.82rem;font-weight:700;color:var(--n600);width:100%;margin-bottom:.25rem;">Add to today's meals:</div>
+          <button class="btn btn-outline btn-sm" onclick="addToMeal(${r.id},'breakfast')">🌅 Breakfast</button>
+          <button class="btn btn-outline btn-sm" onclick="addToMeal(${r.id},'lunch')">☀️ Lunch</button>
+          <button class="btn btn-outline btn-sm" onclick="addToMeal(${r.id},'dinner')">🌙 Dinner</button>
+        </div>`;
+      document.getElementById('modalBg').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modalBg').classList.remove('open');
+    }
+
+    async function addToMeal(id, type) {
+      const r = RECIPES.find(x=>x.id===id);
+      if (!r) return;
+      try {
+        await api('/meals', { method:'POST', body: JSON.stringify({
+          mealType: type, foodName: r.name,
+          calories: r.cal, protein: r.pro, carbs: r.carb, fat: r.fat,
+          quantity: 100, date: today()
+        })});
+        toast(`✅ ${r.name} added to ${type}!`);
+        closeModal();
+      } catch(e) { toast('⚠️ '+e.message); }
+    }
+
+    async function init() {
+      const user = await requireLogin();
+      if (!user) return;
+      injectBadge(user);
+      render();
+    }
+    init();
+  </script>
+</body>
+</html>

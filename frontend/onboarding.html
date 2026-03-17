@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartMeal — Setup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="app.css"/>
+  <style>
+    body{display:flex;flex-direction:column;min-height:100vh;}
+    .ob-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.25rem;position:relative;z-index:1;max-width:500px;margin:0 auto;width:100%;}
+    .ob-logo{font-family:var(--font-d);font-size:1.3rem;font-weight:800;color:var(--o700);margin-bottom:2rem;display:flex;align-items:center;gap:7px;}
+    .prog-bars{display:flex;gap:5px;width:100%;margin-bottom:2rem;}
+    .pbar{flex:1;height:5px;border-radius:var(--r-full);background:rgba(234,88,12,.1);transition:background .35s;}
+    .pbar.done{background:var(--o500);}.pbar.active{background:linear-gradient(90deg,var(--o600),var(--y400));}
+    .step{display:none;width:100%;animation:fadeUp .3s ease both;}
+    .step.active{display:block;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .step-title{font-family:var(--font-d);font-size:1.75rem;color:var(--n900);margin-bottom:.35rem;}
+    .step-sub{color:var(--n400);font-size:.9rem;margin-bottom:1.5rem;}
+    .opt-grid{display:grid;gap:.65rem;margin-bottom:1.25rem;}
+    .opt-grid-3{grid-template-columns:1fr 1fr 1fr;}
+    .opt-grid-2{grid-template-columns:1fr 1fr;}
+    .opt-grid-1{grid-template-columns:1fr;}
+    .opt{
+      background:rgba(255,255,255,.55);backdrop-filter:blur(14px);
+      border:2px solid rgba(255,255,255,.82);border-radius:var(--r-lg);
+      padding:1rem;text-align:center;cursor:pointer;
+      transition:all .2s;
+    }
+    .opt:hover{border-color:rgba(249,115,22,.3);background:rgba(255,255,255,.8);transform:translateY(-2px);}
+    .opt.sel{border-color:var(--o500);background:rgba(249,115,22,.08);box-shadow:0 0 0 3px rgba(249,115,22,.14);}
+    .opt-icon{font-size:1.9rem;display:block;margin-bottom:.4rem;}
+    .opt-label{font-size:.9rem;font-weight:700;color:var(--n800);}
+    .opt-desc{font-size:.73rem;color:var(--n400);margin-top:2px;}
+    .opt-row{text-align:left;display:flex;align-items:center;gap:12px;padding:1rem 1.1rem;}
+    .nav-row{display:flex;gap:.7rem;margin-top:.5rem;}
+
+    /* BMI result card */
+    .bmi-card{
+      background:linear-gradient(135deg,rgba(234,88,12,.85),rgba(234,179,8,.72));
+      border-radius:var(--r-xl);padding:2rem;text-align:center;
+      border:1.5px solid rgba(255,255,255,.28);margin-bottom:1rem;
+      box-shadow:0 8px 32px rgba(234,88,12,.22);
+    }
+    .bmi-num{font-family:var(--font-d);font-size:4.5rem;color:#fff;font-weight:800;line-height:1;}
+    .bmi-cat{font-size:1rem;color:rgba(255,255,255,.9);margin-top:.4rem;font-weight:600;}
+    .bmi-bar-wrap{margin:1rem 0 .3rem;height:10px;border-radius:var(--r-full);background:rgba(255,255,255,.2);position:relative;overflow:visible;}
+    .bmi-ptr{position:absolute;top:-5px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18);transform:translateX(-50%);transition:left .6s cubic-bezier(.4,0,.2,1);}
+    .bmi-labels{display:flex;justify-content:space-between;font-size:.68rem;color:rgba(255,255,255,.7);}
+  </style>
+</head>
+<body>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <div class="ob-wrap">
+    <div class="ob-logo"><span>🥗</span>SmartMeal</div>
+    <div class="prog-bars" id="progBars"></div>
+
+    <!-- Step 0: Goal -->
+    <div class="step active" id="s0">
+      <div class="step-title">What's your goal? 🎯</div>
+      <div class="step-sub">We'll personalise your daily calorie target.</div>
+      <div class="opt-grid opt-grid-3">
+        <div class="opt" onclick="pick(this,'goal','lose')"><span class="opt-icon">📉</span><div class="opt-label">Lose weight</div><div class="opt-desc">Calorie deficit</div></div>
+        <div class="opt" onclick="pick(this,'goal','maintain')"><span class="opt-icon">⚖️</span><div class="opt-label">Maintain</div><div class="opt-desc">Stay balanced</div></div>
+        <div class="opt" onclick="pick(this,'goal','gain')"><span class="opt-icon">📈</span><div class="opt-label">Gain weight</div><div class="opt-desc">Calorie surplus</div></div>
+      </div>
+      <button class="btn btn-primary" onclick="next()">Continue →</button>
+    </div>
+
+    <!-- Step 1: Gender -->
+    <div class="step" id="s1">
+      <div class="step-title">Your gender 👤</div>
+      <div class="step-sub">Helps calculate your metabolic rate accurately.</div>
+      <div class="opt-grid opt-grid-2">
+        <div class="opt" onclick="pick(this,'gender','male')"><span class="opt-icon">♂️</span><div class="opt-label">Male</div></div>
+        <div class="opt" onclick="pick(this,'gender','female')"><span class="opt-icon">♀️</span><div class="opt-label">Female</div></div>
+      </div>
+      <div class="opt-grid opt-grid-1" style="margin-bottom:1.25rem;"><div class="opt" onclick="pick(this,'gender','other')"><div class="opt-label">Prefer not to say</div></div></div>
+      <div class="nav-row"><button class="btn btn-outline" onclick="prev()">← Back</button><button class="btn btn-primary" onclick="next()">Continue →</button></div>
+    </div>
+
+    <!-- Step 2: Activity -->
+    <div class="step" id="s2">
+      <div class="step-title">Activity level 🏃</div>
+      <div class="step-sub">How active are you on a typical week?</div>
+      <div class="opt-grid opt-grid-1" style="gap:.55rem;margin-bottom:1.25rem;">
+        <div class="opt opt-row" onclick="pick(this,'activity','sedentary')"><span style="font-size:1.5rem;">🛋️</span><div><div class="opt-label">Sedentary</div><div class="opt-desc">Little or no exercise</div></div></div>
+        <div class="opt opt-row" onclick="pick(this,'activity','light')"><span style="font-size:1.5rem;">🚶</span><div><div class="opt-label">Low active</div><div class="opt-desc">Light exercise 1–3 days/week</div></div></div>
+        <div class="opt opt-row" onclick="pick(this,'activity','moderate')"><span style="font-size:1.5rem;">🏃</span><div><div class="opt-label">Active</div><div class="opt-desc">Moderate exercise 3–5 days/week</div></div></div>
+        <div class="opt opt-row" onclick="pick(this,'activity','very_active')"><span style="font-size:1.5rem;">🏋️</span><div><div class="opt-label">Very active</div><div class="opt-desc">Hard exercise 6–7 days/week</div></div></div>
+      </div>
+      <div class="nav-row"><button class="btn btn-outline" onclick="prev()">← Back</button><button class="btn btn-primary" onclick="next()">Continue →</button></div>
+    </div>
+
+    <!-- Step 3: Measurements -->
+    <div class="step" id="s3">
+      <div class="step-title">Your measurements 📏</div>
+      <div class="step-sub">Used to calculate your BMI and calorie needs.</div>
+      <div class="card">
+        <div class="field-group"><label class="field-label">Height (cm)</label><input class="field-input" type="number" id="iHeight" placeholder="170" min="100" max="250"/></div>
+        <div class="field-group"><label class="field-label">Current weight (kg)</label><input class="field-input" type="number" id="iWeight" placeholder="70" min="20" max="300"/></div>
+        <div class="field-group" style="margin-bottom:0;"><label class="field-label">Target weight (kg)</label><input class="field-input" type="number" id="iTarget" placeholder="65" min="20" max="300"/></div>
+      </div>
+      <div class="nav-row"><button class="btn btn-outline" onclick="prev()">← Back</button><button class="btn btn-primary" onclick="next()">Continue →</button></div>
+    </div>
+
+    <!-- Step 4: Age -->
+    <div class="step" id="s4">
+      <div class="step-title">Your age 🎂</div>
+      <div class="step-sub">Age affects your daily calorie needs.</div>
+      <div class="card"><div class="field-group" style="margin-bottom:0;"><label class="field-label">Age (years)</label><input class="field-input" type="number" id="iAge" placeholder="25" min="10" max="120"/></div></div>
+      <div class="nav-row"><button class="btn btn-outline" onclick="prev()">← Back</button><button class="btn btn-primary" onclick="calcAndSave()">Calculate my plan 🎯</button></div>
+    </div>
+
+    <!-- Step 5: Result -->
+    <div class="step" id="s5">
+      <div class="step-title">Your personalised plan ✨</div>
+      <div class="step-sub">Based on your goals and measurements.</div>
+      <div class="bmi-card">
+        <div style="font-size:.82rem;color:rgba(255,255,255,.78);margin-bottom:.3rem;">Body Mass Index</div>
+        <div class="bmi-num" id="rBMI">—</div>
+        <div class="bmi-cat" id="rCat">—</div>
+        <div class="bmi-bar-wrap"><div class="bmi-ptr" id="bmiPtr" style="left:40%"></div></div>
+        <div class="bmi-labels"><span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span></div>
+      </div>
+      <div class="metrics metrics-2" style="margin-bottom:1rem;">
+        <div class="metric-card"><span class="metric-val" id="rCal">—</span><span class="metric-lbl">Daily calories</span></div>
+        <div class="metric-card"><span class="metric-val" id="rPro">—</span><span class="metric-lbl">Daily protein</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="location.href='dashboard.html'">Start planning meals →</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+  <script>
+    const STEPS = 6;
+    let step = 0;
+    const ans = { goal:'', gender:'', activity:'moderate', height:170, weight:70, targetWeight:65, age:25 };
+
+    // Build progress bars
+    const pb = document.getElementById('progBars');
+    for (let i=0;i<STEPS;i++) {
+      const b=document.createElement('div');
+      b.className='pbar'+(i===0?' active':'');
+      b.id='pb'+i; pb.appendChild(b);
+    }
+
+    function syncBars() {
+      for(let i=0;i<STEPS;i++){
+        const b=document.getElementById('pb'+i);
+        b.className='pbar'+(i<step?'  done':i===step?' active':'');
+      }
+    }
+
+    function pick(el, field, val) {
+      const grid = el.closest('.opt-grid,.step');
+      grid.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+      el.classList.add('sel');
+      ans[field]=val;
+    }
+
+    function next() {
+      if(step<STEPS-1){
+        document.getElementById('s'+step).classList.remove('active');
+        step++;
+        document.getElementById('s'+step).classList.add('active');
+        syncBars();
+      }
+    }
+    function prev() {
+      if(step>0){
+        document.getElementById('s'+step).classList.remove('active');
+        step--;
+        document.getElementById('s'+step).classList.add('active');
+        syncBars();
+      }
+    }
+
+    async function calcAndSave() {
+      ans.height       = parseFloat(document.getElementById('iHeight').value)||170;
+      ans.weight       = parseFloat(document.getElementById('iWeight').value)||70;
+      ans.targetWeight = parseFloat(document.getElementById('iTarget').value)||65;
+      ans.age          = parseInt(document.getElementById('iAge').value)||25;
+
+      // BMI
+      const h   = ans.height/100;
+      const bmi = Math.round((ans.weight/(h*h))*10)/10;
+      const cat = bmi<18.5?'Underweight':bmi<25?'Normal weight':bmi<30?'Overweight':'Obese';
+
+      // TDEE (Mifflin-St Jeor)
+      let bmr = ans.gender==='female'
+        ? 10*ans.weight+6.25*ans.height-5*ans.age-161
+        : 10*ans.weight+6.25*ans.height-5*ans.age+5;
+      const mult={sedentary:1.2,light:1.375,moderate:1.55,very_active:1.725};
+      let tdee = bmr*(mult[ans.activity]||1.55);
+      const adj={lose:-500,maintain:0,gain:500};
+      const dailyCal  = Math.round(tdee+(adj[ans.goal]||0));
+      const dailyPro  = Math.round(ans.weight*1.6);
+
+      // Show result
+      document.getElementById('rBMI').textContent = bmi;
+      document.getElementById('rCat').textContent  = cat;
+      document.getElementById('rCal').textContent  = dailyCal;
+      document.getElementById('rPro').textContent  = dailyPro+'g';
+      const pct = Math.min(95,Math.max(5,((bmi-15)/25)*100));
+      document.getElementById('bmiPtr').style.left = pct+'%';
+
+      // Save to backend
+      try {
+        await api('/profile', {
+          method:'POST',
+          body: JSON.stringify({ ...ans, bmi, bmiCategory:cat, dailyCalories:dailyCal, dailyProtein:dailyPro, onboardingDone:true })
+        });
+      } catch(e) { console.log('Profile save error:', e.message); }
+
+      next();
+    }
+
+    async function init() {
+      const user = await requireLogin();
+      if (!user) return;
+      // Check if already onboarded
+      try {
+        const data = await api('/profile');
+        if (data.profile?.onboardingDone) {
+          location.href = 'dashboard.html';
+        }
+      } catch {}
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartMeal — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="app.css"/>
+  <style>
+    body{display:flex;min-height:100vh;}
+    .auth-left{
+      flex:0 0 46%;position:relative;overflow:hidden;
+      display:flex;align-items:center;justify-content:center;
+      padding:3rem;min-height:100vh;
+    }
+    .auth-left::before{
+      content:'';position:absolute;inset:0;z-index:0;
+      background:linear-gradient(145deg,rgba(234,88,12,.88) 0%,rgba(249,115,22,.8) 40%,rgba(234,179,8,.72) 100%);
+    }
+    .auth-left::after{
+      content:'';position:absolute;inset:0;z-index:0;
+      background:radial-gradient(circle at 25% 25%,rgba(255,255,255,.12) 0%,transparent 50%);
+    }
+    .auth-left-inner{position:relative;z-index:1;max-width:400px;width:100%;}
+    .al-logo{
+      display:inline-flex;align-items:center;gap:9px;
+      font-family:var(--font-d);font-size:1.15rem;font-weight:800;color:#fff;
+      background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
+      border-radius:var(--r-full);padding:9px 20px;margin-bottom:3rem;
+      backdrop-filter:blur(10px);
+    }
+    .al-title{font-family:var(--font-d);font-size:clamp(2rem,3.5vw,2.8rem);color:#fff;margin-bottom:1rem;line-height:1.15;}
+    .al-title em{font-style:italic;color:var(--y300);}
+    .al-desc{color:rgba(255,255,255,.82);font-size:.97rem;line-height:1.7;margin-bottom:2.5rem;}
+    .al-features{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2.5rem;}
+    .al-feat{
+      display:flex;align-items:center;gap:11px;
+      background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);
+      border-radius:var(--r-md);padding:11px 15px;
+      color:rgba(255,255,255,.9);font-size:.88rem;font-weight:500;
+      backdrop-filter:blur(6px);
+      animation:slideL .45s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .al-feat:nth-child(1){animation-delay:.1s;}
+    .al-feat:nth-child(2){animation-delay:.2s;}
+    .al-feat:nth-child(3){animation-delay:.3s;}
+    .al-feat:nth-child(4){animation-delay:.4s;}
+    @keyframes slideL{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:translateX(0)}}
+
+    .auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem 1.5rem;position:relative;z-index:1;}
+    .auth-box{
+      background:rgba(255,255,255,.6);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
+      border:1.5px solid rgba(255,255,255,.82);border-radius:var(--r-xl);
+      padding:2.5rem 2.25rem;width:100%;max-width:440px;
+      box-shadow:0 8px 36px rgba(234,88,12,.12),0 2px 6px rgba(255,255,255,.75) inset;
+      animation:fadeUp .5s cubic-bezier(.34,1.2,.64,1) both;
+    }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+    .tabs{display:flex;gap:4px;background:rgba(234,88,12,.07);border:1px solid rgba(234,88,12,.1);border-radius:var(--r-full);padding:4px;margin-bottom:2rem;}
+    .tab{flex:1;padding:9px;border-radius:var(--r-full);border:none;font-family:var(--font-b);font-size:.9rem;font-weight:600;cursor:pointer;color:var(--n500);background:transparent;transition:all .25s;}
+    .tab.active{background:linear-gradient(135deg,var(--o600),var(--o400));color:#fff;box-shadow:0 3px 12px rgba(234,88,12,.3);}
+    .tab:hover:not(.active){color:var(--o600);background:rgba(249,115,22,.08);}
+
+    .form-panel{animation:fadeIn .28s ease both;}
+    .form-panel.hidden{display:none;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    .form-title{font-size:1.55rem;color:var(--n800);margin-bottom:.3rem;}
+    .form-sub{color:var(--n400);font-size:.88rem;margin-bottom:1.75rem;}
+
+    .fw{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.7);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.88);border-radius:var(--r-md);padding:11px 14px;transition:all .18s;box-shadow:0 2px 6px rgba(234,88,12,.04),0 1px 0 rgba(255,255,255,.9) inset;}
+    .fw:focus-within{border-color:rgba(249,115,22,.42);background:rgba(255,255,255,.92);box-shadow:0 0 0 3px rgba(249,115,22,.12);}
+    .fw.err{border-color:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.1);}
+    .fw input{flex:1;border:none;outline:none;background:transparent;font-family:var(--font-b);font-size:.92rem;color:var(--n900);}
+    .fw input::placeholder{color:var(--n300);}
+    .fw-icon{font-size:.88rem;flex-shrink:0;}
+    .pw-eye{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.45;transition:opacity .18s;padding:0;}
+    .pw-eye:hover{opacity:1;}
+
+    .lbl{font-size:.78rem;font-weight:700;color:var(--n600);text-transform:uppercase;letter-spacing:.04em;display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+    .forgot{font-size:.77rem;font-weight:600;color:var(--o500);transition:color .18s;}
+    .forgot:hover{color:var(--o700);}
+    .err-msg{font-size:.75rem;color:var(--red);font-weight:600;min-height:.85rem;margin-top:4px;}
+
+    .pw-bar{height:4px;background:rgba(234,88,12,.08);border-radius:var(--r-full);margin-top:5px;overflow:hidden;}
+    .pw-fill{height:100%;border-radius:var(--r-full);transition:width .35s,background .35s;}
+
+    .check-row{display:flex;align-items:center;gap:8px;margin-bottom:.75rem;}
+    .check-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--o500);cursor:pointer;}
+    .check-row label{font-size:.84rem;color:var(--n600);cursor:pointer;}
+    .ilink{color:var(--o500);font-weight:600;}
+
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+
+    .divider{display:flex;align-items:center;gap:10px;color:var(--n300);font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:.5rem 0 1.25rem;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(234,88,12,.18),transparent);}
+
+    .msg{margin-top:.85rem;padding:10px 14px;border-radius:var(--r-md);font-size:.83rem;font-weight:600;display:none;}
+    .msg.ok{display:block;background:rgba(249,115,22,.1);color:var(--o700);border:1px solid rgba(249,115,22,.22);}
+    .msg.no{display:block;background:var(--red-lt);color:var(--red);border:1px solid #fecaca;}
+
+    .back-btn{background:none;border:none;cursor:pointer;color:var(--o500);font-size:.84rem;font-weight:600;padding:0;margin-bottom:.7rem;display:block;transition:color .18s;}
+    .back-btn:hover{color:var(--o700);}
+
+    @media(max-width:820px){.auth-left{display:none;}.auth-right{padding:1.5rem 1rem;}}
+    @media(max-width:480px){.auth-box{padding:1.75rem 1.25rem;}.row2{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <!-- Left panel -->
+  <div class="auth-left">
+    <div class="auth-left-inner">
+      <div class="al-logo"><span>🥗</span> SmartMeal</div>
+      <div class="al-title">Plan smarter.<br/><em>Eat better.</em></div>
+      <div class="al-desc">Your personalised nutrition planner with BMI tracking, drag-and-drop meal planning, and live macro insights.</div>
+      <div class="al-features">
+        <div class="al-feat"><span>📅</span> 7-day drag-and-drop planner</div>
+        <div class="al-feat"><span>📊</span> Live calorie & macro tracker</div>
+        <div class="al-feat"><span>🎯</span> Personalised BMI & calorie goals</div>
+        <div class="al-feat"><span>💧</span> Daily water intake tracker</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="auth-right">
+    <div class="auth-box">
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" id="tabLogin"    onclick="switchTab('login')">Sign In</button>
+        <button class="tab"        id="tabRegister" onclick="switchTab('register')">Create Account</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="pLogin" class="form-panel">
+        <div class="form-title">Welcome back 👋</div>
+        <div class="form-sub">Sign in to access your meal plans</div>
+
+        <form id="loginForm" novalidate>
+          <div style="margin-bottom:.9rem;">
+            <div class="lbl">Email address</div>
+            <div class="fw" id="fw-le"><span class="fw-icon">✉️</span><input type="email" id="lEmail" placeholder="you@example.com" autocomplete="email"/></div>
+            <div class="err-msg" id="em-le"></div>
+          </div>
+          <div style="margin-bottom:.9rem;">
+            <div class="lbl">Password <a href="#" class="forgot" onclick="switchTab('forgot');return false;">Forgot password?</a></div>
+            <div class="fw" id="fw-lp"><span class="fw-icon">🔒</span><input type="password" id="lPw" placeholder="••••••••" autocomplete="current-password"/><button type="button" class="pw-eye" onclick="togglePw('lPw',this)">👁️</button></div>
+            <div class="err-msg" id="em-lp"></div>
+          </div>
+          <div class="check-row"><input type="checkbox" id="rememberMe"/><label for="rememberMe">Remember me</label></div>
+          <button type="submit" class="btn btn-primary" id="loginBtn">Sign In →</button>
+          <div class="msg" id="loginMsg"></div>
+        </form>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="pRegister" class="form-panel hidden">
+        <div class="form-title">Create account 🌿</div>
+        <div class="form-sub">Start your nutrition journey today</div>
+
+        <form id="registerForm" novalidate>
+          <div class="row2" style="margin-bottom:.9rem;">
+            <div>
+              <div class="lbl">First name</div>
+              <div class="fw" id="fw-rfn"><span class="fw-icon">👤</span><input type="text" id="rFn" placeholder="Jane"/></div>
+              <div class="err-msg" id="em-rfn"></div>
+            </div>
+            <div>
+              <div class="lbl">Last name</div>
+              <div class="fw" id="fw-rln"><input type="text" id="rLn" placeholder="Doe"/></div>
+              <div class="err-msg" id="em-rln"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:.9rem;">
+            <div class="lbl">Email address</div>
+            <div class="fw" id="fw-re"><span class="fw-icon">✉️</span><input type="email" id="rEmail" placeholder="you@example.com" autocomplete="email"/></div>
+            <div class="err-msg" id="em-re"></div>
+          </div>
+          <div style="margin-bottom:.9rem;">
+            <div class="lbl">Password</div>
+            <div class="fw" id="fw-rp"><span class="fw-icon">🔒</span><input type="password" id="rPw" placeholder="Min. 8 characters"/><button type="button" class="pw-eye" onclick="togglePw('rPw',this)">👁️</button></div>
+            <div class="pw-bar"><div class="pw-fill" id="pwFill"></div></div>
+            <div class="err-msg" id="em-rp"></div>
+          </div>
+          <div style="margin-bottom:.9rem;">
+            <div class="lbl">Confirm password</div>
+            <div class="fw" id="fw-rc"><span class="fw-icon">🔒</span><input type="password" id="rCf" placeholder="Repeat password"/><button type="button" class="pw-eye" onclick="togglePw('rCf',this)">👁️</button></div>
+            <div class="err-msg" id="em-rc"></div>
+          </div>
+          <div class="check-row"><input type="checkbox" id="terms"/><label for="terms">I agree to the <a href="#" class="ilink">Terms</a> & <a href="#" class="ilink">Privacy Policy</a></label></div>
+          <div class="err-msg" id="em-terms" style="margin-top:-4px;margin-bottom:8px;"></div>
+          <button type="submit" class="btn btn-primary" id="registerBtn">Create Account →</button>
+          <div class="msg" id="registerMsg"></div>
+        </form>
+      </div>
+
+      <!-- FORGOT -->
+      <div id="pForgot" class="form-panel hidden">
+        <button class="back-btn" onclick="switchTab('login')">← Back to Sign In</button>
+        <div class="form-title">Reset Password 🔑</div>
+        <div class="form-sub">We'll log the reset link to the server console (dev mode)</div>
+        <form id="forgotForm" novalidate>
+          <div style="margin-bottom:.9rem;">
+            <div class="lbl">Email address</div>
+            <div class="fw" id="fw-fe"><span class="fw-icon">✉️</span><input type="email" id="fEmail" placeholder="you@example.com"/></div>
+            <div class="err-msg" id="em-fe"></div>
+          </div>
+          <button type="submit" class="btn btn-primary">Send Reset Link →</button>
+          <div class="msg" id="forgotMsg"></div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const API_AUTH = 'http://localhost:5000/api/auth';
+
+    // Redirect if already logged in
+    if (localStorage.getItem('sm_token')) location.href = 'dashboard.html';
+
+    function switchTab(t) {
+      ['login','register','forgot'].forEach(x => {
+        document.getElementById('p'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('hidden', x !== t);
+      });
+      ['Login','Register'].forEach(id => {
+        const el = document.getElementById('tab'+id);
+        if (el) el.classList.toggle('active', id.toLowerCase() === t);
+      });
+    }
+
+    function togglePw(id, btn) {
+      const inp = document.getElementById(id);
+      inp.type = inp.type === 'text' ? 'password' : 'text';
+      btn.textContent = inp.type === 'text' ? '🙈' : '👁️';
+    }
+
+    // Password strength
+    document.getElementById('rPw').addEventListener('input', function() {
+      const v = this.value;
+      let s = 0;
+      if (v.length >= 8) s++;
+      if (/[A-Z]/.test(v)) s++;
+      if (/[0-9]/.test(v)) s++;
+      if (/[^A-Za-z0-9]/.test(v)) s++;
+      const cols = ['transparent','#ef4444','#f59e0b','#3b82f6','#22c55e'];
+      const pcts = ['0%','25%','50%','75%','100%'];
+      const f = document.getElementById('pwFill');
+      f.style.width = pcts[s];
+      f.style.background = cols[s];
+    });
+
+    function setErr(id, msg) {
+      const em = document.getElementById('em-'+id);
+      const fw = document.getElementById('fw-'+id);
+      if (em) em.textContent = msg;
+      if (fw) fw.classList.toggle('err', !!msg);
+    }
+    function clearErrs() {
+      document.querySelectorAll('.err-msg').forEach(e => e.textContent = '');
+      document.querySelectorAll('.fw.err').forEach(f => f.classList.remove('err'));
+    }
+    function showMsg(id, msg, ok) {
+      const el = document.getElementById(id);
+      el.textContent = msg; el.className = 'msg ' + (ok ? 'ok' : 'no');
+    }
+    function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+    function setLoading(btnId, loading, text) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = loading;
+      btn.innerHTML = loading ? `<span class="spinner"></span> ${text}` : text;
+    }
+
+    // LOGIN
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault(); clearErrs();
+      const email = document.getElementById('lEmail').value.trim();
+      const pw    = document.getElementById('lPw').value;
+      let ok = true;
+      if (!email || !isEmail(email)) { setErr('le','Enter a valid email'); ok=false; }
+      if (!pw) { setErr('lp','Password is required'); ok=false; }
+      if (!ok) return;
+
+      setLoading('loginBtn', true, 'Signing in…');
+      try {
+        const res  = await fetch(API_AUTH + '/login', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ email, password: pw }), credentials:'include'
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('sm_token', data.token);
+          localStorage.setItem('sm_user',  JSON.stringify(data.user));
+          showMsg('loginMsg', `✅ Welcome back, ${data.user.firstName}!`, true);
+          setTimeout(() => location.href = 'dashboard.html', 1000);
+        } else {
+          showMsg('loginMsg', data.message || 'Invalid credentials', false);
+        }
+      } catch {
+        showMsg('loginMsg', '⚠️ Cannot reach server. Is the backend running?', false);
+      } finally {
+        setLoading('loginBtn', false, 'Sign In →');
+      }
+    });
+
+    // REGISTER
+    document.getElementById('registerForm').addEventListener('submit', async e => {
+      e.preventDefault(); clearErrs();
+      const fn    = document.getElementById('rFn').value.trim();
+      const ln    = document.getElementById('rLn').value.trim();
+      const email = document.getElementById('rEmail').value.trim();
+      const pw    = document.getElementById('rPw').value;
+      const cf    = document.getElementById('rCf').value;
+      const agr   = document.getElementById('terms').checked;
+      let ok = true;
+      if (!fn)              { setErr('rfn','First name required'); ok=false; }
+      if (!ln)              { setErr('rln','Last name required'); ok=false; }
+      if (!isEmail(email))  { setErr('re','Enter a valid email'); ok=false; }
+      if (pw.length < 8)    { setErr('rp','Minimum 8 characters'); ok=false; }
+      if (pw !== cf)        { setErr('rc','Passwords do not match'); ok=false; }
+      if (!agr)             { setErr('terms','Please accept the terms'); ok=false; }
+      if (!ok) return;
+
+      setLoading('registerBtn', true, 'Creating account…');
+      try {
+        const res  = await fetch(API_AUTH + '/register', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ firstName:fn, lastName:ln, email, password:pw }), credentials:'include'
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('sm_token', data.token);
+          localStorage.setItem('sm_user',  JSON.stringify(data.user));
+          showMsg('registerMsg', '🎉 Account created! Setting up your plan…', true);
+          setTimeout(() => location.href = 'onboarding.html', 1200);
+        } else {
+          showMsg('registerMsg', data.message || 'Registration failed', false);
+        }
+      } catch {
+        showMsg('registerMsg', '⚠️ Cannot reach server. Is the backend running?', false);
+      } finally {
+        setLoading('registerBtn', false, 'Create Account →');
+      }
+    });
+
+    // FORGOT
+    document.getElementById('forgotForm').addEventListener('submit', async e => {
+      e.preventDefault(); clearErrs();
+      const email = document.getElementById('fEmail').value.trim();
+      if (!isEmail(email)) { setErr('fe','Enter a valid email'); return; }
+      try {
+        const res  = await fetch(API_AUTH + '/forgot-password', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        showMsg('forgotMsg', data.message, res.ok);
+      } catch {
+        showMsg('forgotMsg', '⚠️ Server error.', false);
+      }
+    });
+  </script>
+</body>
+</html>
