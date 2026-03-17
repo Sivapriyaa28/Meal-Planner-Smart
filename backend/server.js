@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const express      = require('express');
 const mongoose     = require('mongoose');
 const cors         = require('cors');
@@ -12,6 +13,7 @@ const PORT = process.env.PORT || 5000;
 
 // ── Security ──
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+
 app.use(cors({
   origin: true,
   credentials: true,
@@ -26,31 +28,60 @@ app.use(cookieParser());
 app.use(morgan('dev'));
 
 // ── Rate limiting ──
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, message: { message: 'Too many requests.' } });
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { message: 'Too many requests.' }
+});
 app.use('/api/auth', limiter);
 
-// ── Database ──
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/smartmeal')
+// ── Database (FIXED FOR RENDER) ──
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => { console.error('❌ MongoDB error:', err.message); process.exit(1); });
+  .catch(err => {
+    console.error('❌ MongoDB error:', err.message);
+    process.exit(1);
+  });
 
-// ── Routes ──
+// ── ROUTES ──
+
+// 🔹 Test route
+app.get('/', (req, res) => {
+  res.send('Backend is running 🚀');
+});
+
+// 🔹 API test
+app.get('/api', (req, res) => {
+  res.json({ message: 'API working ✅' });
+});
+
+// 🔹 Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date() });
+});
+
+// 🔹 Main routes
 app.use('/api/auth',    require('./routes/auth'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/meals',   require('./routes/meals'));
 app.use('/api/water',   require('./routes/water'));
 
-// ── Health check ──
-app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
-
-// ── 404 ──
-app.use((req, res) => res.status(404).json({ message: 'Route not found' }));
+// ── 404 handler ──
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
 
 // ── Error handler ──
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(err.status || 500).json({ message: err.message || 'Internal server error' });
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal server error'
+  });
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// ── START SERVER ──
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
 module.exports = app;

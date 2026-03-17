@@ -1,5 +1,5 @@
 /* SmartMeal — app.js  (shared across all pages) */
-const API = 'http://localhost:5000/api';
+const API = 'https://meal-planner-smart.onrender.com';
 
 /* ── token helpers ── */
 const getToken = () => localStorage.getItem('sm_token');
