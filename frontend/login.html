@@ -221,152 +221,192 @@
 
   <script src="app.js"></script>
   <script>
-    const API_AUTH = 'https://meal-planner-smart.onrender.com';
+  // ✅ FIXED BASE URL
+  const API_AUTH = 'https://meal-planner-smart.onrender.com/api/auth';
 
-    // Redirect if already logged in
-    if (localStorage.getItem('sm_token')) location.href = 'dashboard.html';
+  // Redirect if already logged in
+  if (localStorage.getItem('sm_token')) location.href = 'dashboard.html';
 
-    function switchTab(t) {
-      ['login','register','forgot'].forEach(x => {
-        document.getElementById('p'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('hidden', x !== t);
+  function switchTab(t) {
+    ['login','register','forgot'].forEach(x => {
+      document.getElementById('p'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('hidden', x !== t);
+    });
+    ['Login','Register'].forEach(id => {
+      const el = document.getElementById('tab'+id);
+      if (el) el.classList.toggle('active', id.toLowerCase() === t);
+    });
+  }
+
+  function togglePw(id, btn) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'text' ? 'password' : 'text';
+    btn.textContent = inp.type === 'text' ? '🙈' : '👁️';
+  }
+
+  function setErr(id, msg) {
+    const em = document.getElementById('em-'+id);
+    const fw = document.getElementById('fw-'+id);
+    if (em) em.textContent = msg;
+    if (fw) fw.classList.toggle('err', !!msg);
+  }
+
+  function clearErrs() {
+    document.querySelectorAll('.err-msg').forEach(e => e.textContent = '');
+    document.querySelectorAll('.fw.err').forEach(f => f.classList.remove('err'));
+  }
+
+  function showMsg(id, msg, ok) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'msg ' + (ok ? 'ok' : 'no');
+  }
+
+  function isEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  }
+
+  function setLoading(btnId, loading, text) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading ? `⏳ ${text}` : text;
+  }
+
+  // 🔐 LOGIN
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    clearErrs();
+
+    const email = document.getElementById('lEmail').value.trim();
+    const pw    = document.getElementById('lPw').value;
+
+    let ok = true;
+
+    if (!email || !isEmail(email)) {
+      setErr('le','Enter a valid email');
+      ok = false;
+    }
+
+    if (!pw) {
+      setErr('lp','Password is required');
+      ok = false;
+    }
+
+    if (!ok) return;
+
+    setLoading('loginBtn', true, 'Signing in…');
+
+    try {
+      const res = await fetch(API_AUTH + '/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pw }),
+        credentials: 'include'
       });
-      ['Login','Register'].forEach(id => {
-        const el = document.getElementById('tab'+id);
-        if (el) el.classList.toggle('active', id.toLowerCase() === t);
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('sm_token', data.token);
+        localStorage.setItem('sm_user', JSON.stringify(data.user));
+
+        showMsg('loginMsg', `✅ Welcome back, ${data.user.firstName}!`, true);
+
+        setTimeout(() => {
+          location.href = 'dashboard.html';
+        }, 1000);
+      } else {
+        showMsg('loginMsg', data.message || 'Invalid credentials', false);
+      }
+
+    } catch {
+      showMsg('loginMsg', '⚠️ Cannot reach server. Check backend.', false);
+    }
+
+    setLoading('loginBtn', false, 'Sign In →');
+  });
+
+  // 📝 REGISTER
+  document.getElementById('registerForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    clearErrs();
+
+    const fn    = document.getElementById('rFn').value.trim();
+    const ln    = document.getElementById('rLn').value.trim();
+    const email = document.getElementById('rEmail').value.trim();
+    const pw    = document.getElementById('rPw').value;
+    const cf    = document.getElementById('rCf').value;
+    const agr   = document.getElementById('terms').checked;
+
+    let ok = true;
+
+    if (!fn) { setErr('rfn','First name required'); ok=false; }
+    if (!ln) { setErr('rln','Last name required'); ok=false; }
+    if (!isEmail(email)) { setErr('re','Enter a valid email'); ok=false; }
+    if (pw.length < 8) { setErr('rp','Minimum 8 characters'); ok=false; }
+    if (pw !== cf) { setErr('rc','Passwords do not match'); ok=false; }
+    if (!agr) { setErr('terms','Accept terms'); ok=false; }
+
+    if (!ok) return;
+
+    setLoading('registerBtn', true, 'Creating account…');
+
+    try {
+      const res = await fetch(API_AUTH + '/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: fn, lastName: ln, email, password: pw }),
+        credentials: 'include'
       });
-    }
 
-    function togglePw(id, btn) {
-      const inp = document.getElementById(id);
-      inp.type = inp.type === 'text' ? 'password' : 'text';
-      btn.textContent = inp.type === 'text' ? '🙈' : '👁️';
-    }
+      const data = await res.json();
 
-    // Password strength
-    document.getElementById('rPw').addEventListener('input', function() {
-      const v = this.value;
-      let s = 0;
-      if (v.length >= 8) s++;
-      if (/[A-Z]/.test(v)) s++;
-      if (/[0-9]/.test(v)) s++;
-      if (/[^A-Za-z0-9]/.test(v)) s++;
-      const cols = ['transparent','#ef4444','#f59e0b','#3b82f6','#22c55e'];
-      const pcts = ['0%','25%','50%','75%','100%'];
-      const f = document.getElementById('pwFill');
-      f.style.width = pcts[s];
-      f.style.background = cols[s];
-    });
+      if (res.ok) {
+        localStorage.setItem('sm_token', data.token);
+        localStorage.setItem('sm_user', JSON.stringify(data.user));
 
-    function setErr(id, msg) {
-      const em = document.getElementById('em-'+id);
-      const fw = document.getElementById('fw-'+id);
-      if (em) em.textContent = msg;
-      if (fw) fw.classList.toggle('err', !!msg);
-    }
-    function clearErrs() {
-      document.querySelectorAll('.err-msg').forEach(e => e.textContent = '');
-      document.querySelectorAll('.fw.err').forEach(f => f.classList.remove('err'));
-    }
-    function showMsg(id, msg, ok) {
-      const el = document.getElementById(id);
-      el.textContent = msg; el.className = 'msg ' + (ok ? 'ok' : 'no');
-    }
-    function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+        showMsg('registerMsg', '🎉 Account created!', true);
 
-    function setLoading(btnId, loading, text) {
-      const btn = document.getElementById(btnId);
-      btn.disabled = loading;
-      btn.innerHTML = loading ? `<span class="spinner"></span> ${text}` : text;
-    }
-
-    // LOGIN
-    document.getElementById('loginForm').addEventListener('submit', async e => {
-      e.preventDefault(); clearErrs();
-      const email = document.getElementById('lEmail').value.trim();
-      const pw    = document.getElementById('lPw').value;
-      let ok = true;
-      if (!email || !isEmail(email)) { setErr('le','Enter a valid email'); ok=false; }
-      if (!pw) { setErr('lp','Password is required'); ok=false; }
-      if (!ok) return;
-
-      setLoading('loginBtn', true, 'Signing in…');
-      try {
-        const res  = await fetch(API_AUTH + '/login', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ email, password: pw }), credentials:'include'
-        });
-        const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('sm_token', data.token);
-          localStorage.setItem('sm_user',  JSON.stringify(data.user));
-          showMsg('loginMsg', `✅ Welcome back, ${data.user.firstName}!`, true);
-          setTimeout(() => location.href = 'dashboard.html', 1000);
-        } else {
-          showMsg('loginMsg', data.message || 'Invalid credentials', false);
-        }
-      } catch {
-        showMsg('loginMsg', '⚠️ Cannot reach server. Is the backend running?', false);
-      } finally {
-        setLoading('loginBtn', false, 'Sign In →');
+        setTimeout(() => {
+          location.href = 'onboarding.html';
+        }, 1200);
+      } else {
+        showMsg('registerMsg', data.message || 'Registration failed', false);
       }
-    });
 
-    // REGISTER
-    document.getElementById('registerForm').addEventListener('submit', async e => {
-      e.preventDefault(); clearErrs();
-      const fn    = document.getElementById('rFn').value.trim();
-      const ln    = document.getElementById('rLn').value.trim();
-      const email = document.getElementById('rEmail').value.trim();
-      const pw    = document.getElementById('rPw').value;
-      const cf    = document.getElementById('rCf').value;
-      const agr   = document.getElementById('terms').checked;
-      let ok = true;
-      if (!fn)              { setErr('rfn','First name required'); ok=false; }
-      if (!ln)              { setErr('rln','Last name required'); ok=false; }
-      if (!isEmail(email))  { setErr('re','Enter a valid email'); ok=false; }
-      if (pw.length < 8)    { setErr('rp','Minimum 8 characters'); ok=false; }
-      if (pw !== cf)        { setErr('rc','Passwords do not match'); ok=false; }
-      if (!agr)             { setErr('terms','Please accept the terms'); ok=false; }
-      if (!ok) return;
+    } catch {
+      showMsg('registerMsg', '⚠️ Server error.', false);
+    }
 
-      setLoading('registerBtn', true, 'Creating account…');
-      try {
-        const res  = await fetch(API_AUTH + '/register', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ firstName:fn, lastName:ln, email, password:pw }), credentials:'include'
-        });
-        const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('sm_token', data.token);
-          localStorage.setItem('sm_user',  JSON.stringify(data.user));
-          showMsg('registerMsg', '🎉 Account created! Setting up your plan…', true);
-          setTimeout(() => location.href = 'onboarding.html', 1200);
-        } else {
-          showMsg('registerMsg', data.message || 'Registration failed', false);
-        }
-      } catch {
-        showMsg('registerMsg', '⚠️ Cannot reach server. Is the backend running?', false);
-      } finally {
-        setLoading('registerBtn', false, 'Create Account →');
-      }
-    });
+    setLoading('registerBtn', false, 'Create Account →');
+  });
 
-    // FORGOT
-    document.getElementById('forgotForm').addEventListener('submit', async e => {
-      e.preventDefault(); clearErrs();
-      const email = document.getElementById('fEmail').value.trim();
-      if (!isEmail(email)) { setErr('fe','Enter a valid email'); return; }
-      try {
-        const res  = await fetch(API_AUTH + '/forgot-password', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        showMsg('forgotMsg', data.message, res.ok);
-      } catch {
-        showMsg('forgotMsg', '⚠️ Server error.', false);
-      }
-    });
-  </script>
+  // 🔁 FORGOT PASSWORD
+  document.getElementById('forgotForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    clearErrs();
+
+    const email = document.getElementById('fEmail').value.trim();
+
+    if (!isEmail(email)) {
+      setErr('fe','Enter a valid email');
+      return;
+    }
+
+    try {
+      const res = await fetch(API_AUTH + '/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+
+      showMsg('forgotMsg', data.message, res.ok);
+
+    } catch {
+      showMsg('forgotMsg', '⚠️ Server error.', false);
+    }
+  });
+</script>
 </body>
 </html>
